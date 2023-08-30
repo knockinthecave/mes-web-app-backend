@@ -1,0 +1,15 @@
+from django.conf.urls import url, include
+from django.urls import path, include
+from rest_framework import routers
+from . import views 
+from rest_framework.authtoken.views import obtain_auth_token 
+
+router = routers.DefaultRouter()
+router.register(r'warehouse', views.ExternalWarhousingViewSet)
+
+
+urlpatterns = [
+    path('login/', views.login_view, name='login'), # 로그인 URL
+    path('', include(router.urls)), # 입고 목록 조회 URL
+    path('auth/', obtain_auth_token), # 토큰 발급 URL
+]
