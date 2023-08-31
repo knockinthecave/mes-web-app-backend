@@ -41,12 +41,14 @@ INSTALLED_APPS = [
     # Add
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
     
     # App
     'api',
     
     # CORS
     'corsheaders',
+    
 ]
 
 MIDDLEWARE = [
