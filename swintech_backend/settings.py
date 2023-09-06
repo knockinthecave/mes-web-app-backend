@@ -51,6 +51,12 @@ INSTALLED_APPS = [
     
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -85,7 +91,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'swintech_backend.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # React
+    "http://localhost:3000",
+    "http://192.168.0.149:3000" # React
+    
 ]
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases

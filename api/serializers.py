@@ -15,6 +15,8 @@ class ExternalWarhousingSerializer(serializers.ModelSerializer):
             'warehousingWorker', 
             'note', 
             'warehouse_location',
-            'lastState'
+            'lastState',
+            'barcode',
+            'inputDateTime'
         ]
         read_only_fields = ['id',]

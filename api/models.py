@@ -13,6 +13,8 @@ class ExternalWarhousing(models.Model):
     note = models.CharField(max_length=100)
     warehouse_location = models.CharField(max_length=100)
     lastState = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100)
+    inputDateTime = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
