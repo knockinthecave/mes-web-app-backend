@@ -1,18 +1,19 @@
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from django_filters import rest_framework as filters
+from django.http import Http404
 
 from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import authenticate
-
-# Imports related to Warehouse
-from django_filters import rest_framework as filters
-from rest_framework import viewsets
-from .models import ExternalWarhousing
-from .serializers import ExternalWarhousingSerializer
-from django.http import Http404
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+
+from .models import ExternalWarhousing, BOM, ImportInspection
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer
+
 
 # Login API
 @api_view(['POST'])
@@ -29,12 +30,15 @@ def login_view(request):
         else:
             return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# Warehouse API
+
+
+# Warehouse API    
 class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('warehousingDate',)
+    pagination_class = None
     
     @action(detail=False, methods=['GET'], url_path='check-barcode')
     def check_barcode(self, request, *args, **kwargs):
@@ -61,3 +65,36 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
+# BOM API 
+class BOMViewSet(viewsets.ModelViewSet):
+    queryset = BOM.objects.all().order_by('id')
+    serializer_class = BOMSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('partNumber',)
+
+
+  
+class ImportInspectionPagination(PageNumberPagination):
+    page_size = 10
+    page_query_param = 'page'
+    max_page_size = 100
+
+
+    
+class ImportInspectionViewSet(viewsets.ModelViewSet):
+    queryset = ImportInspection.objects.filter(state__in=["조립 대기", "남은 부품"]).order_by('id')
+    serializer_class = ImportInspectionSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('state',)
+    pagination_class = None # Pagination Before
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        page_size = self.request.query_params.get('page_size')
+
+        if page_size:
+            self.pagination_class.page_size = page_size
+
+        return queryset
