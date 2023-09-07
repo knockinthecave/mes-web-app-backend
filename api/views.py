@@ -56,15 +56,18 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['GET'], url_path='recent-warehousing')
     def recent_warehousing(self, request, *args, **kwargs):
-        # Assuming you want a default of 10 recent items.
-        # You can adjust this number or use pagination for larger datasets.
-        recent_items = ExternalWarhousing.objects.all().order_by('-inputDateTime')
-        
+        warehousing_date = request.query_params.get('warehousingDate')
+    
+        if warehousing_date:
+            recent_items = ExternalWarhousing.objects.filter(warehousingDate=warehousing_date).order_by('-inputDateTime')
+        else:
+        # This could be today's date or whatever default behavior you'd like.
+            recent_items = ExternalWarhousing.objects.all().order_by('-inputDateTime')
+
         # Serializing the data
         serializer = ExternalWarhousingSerializer(recent_items, many=True)
-        
+    
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 # BOM API 
@@ -79,7 +82,7 @@ class BOMViewSet(viewsets.ModelViewSet):
 class ImportInspectionPagination(PageNumberPagination):
     page_size = 10
     page_query_param = 'page'
-    max_page_size = 100
+    max_page_size = 10000000000
 
 
     
@@ -88,7 +91,7 @@ class ImportInspectionViewSet(viewsets.ModelViewSet):
     serializer_class = ImportInspectionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state',)
-    pagination_class = None # Pagination Before
+    pagination_class = ImportInspectionPagination # Pagination Before
     
     def get_queryset(self):
         queryset = super().get_queryset()
