@@ -33,12 +33,26 @@ def login_view(request):
 
 
 # Warehouse API    
+class WareHousePagination(PageNumberPagination):
+    page_size = 8
+    page_query_param = 'page'
+    max_page_size = 10000000000
+    
+
+
+class RecentWarehousingPagination(PageNumberPagination):
+    page_size = 5
+    page_query_param = 'page'
+    max_page_size = 10000000000
+    
+    
+    
 class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('warehousingDate',)
-    pagination_class = None
+    pagination_class = WareHousePagination
     
     @action(detail=False, methods=['GET'], url_path='check-barcode')
     def check_barcode(self, request, *args, **kwargs):
@@ -61,24 +75,36 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
         if warehousing_date:
             recent_items = ExternalWarhousing.objects.filter(warehousingDate=warehousing_date).order_by('-inputDateTime')
         else:
-        # This could be today's date or whatever default behavior you'd like.
             recent_items = ExternalWarhousing.objects.all().order_by('-inputDateTime')
 
-        # Serializing the data
-        serializer = ExternalWarhousingSerializer(recent_items, many=True)
+        # Apply pagination
+        paginator = RecentWarehousingPagination()
+        paginated_items = paginator.paginate_queryset(recent_items, request)
+        
+        # Serializing the paginated data
+        serializer = ExternalWarhousingSerializer(paginated_items, many=True)
     
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(serializer.data)
+
 
 
 # BOM API 
+class BOMPagination(PageNumberPagination):
+    page_size = 10
+    page_query_param = 'page'
+    max_page_size = 10000000000
+    
+    
+    
 class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all().order_by('id')
     serializer_class = BOMSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('partNumber',)
+    pagination_class = None # Pagination Before
 
 
-  
+# Import Inspection API
 class ImportInspectionPagination(PageNumberPagination):
     page_size = 10
     page_query_param = 'page'
