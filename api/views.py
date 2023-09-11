@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django_filters import rest_framework as filters
 from django.http import Http404
+from django.http import JsonResponse
 
 from rest_framework import status
 from rest_framework import viewsets
@@ -13,6 +14,8 @@ from rest_framework.pagination import PageNumberPagination
 
 from .models import ExternalWarhousing, BOM, ImportInspection
 from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer
+
+from django.db.models import Q # For OR query
 
 
 # Login API
@@ -100,9 +103,24 @@ class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all().order_by('id')
     serializer_class = BOMSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber',)
+    filterset_fields = ('partNumber',) # you had this, which is just for direct matches
     pagination_class = None # Pagination Before
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        parts_number = self.request.query_params.get('partsNumber', None)
 
+        if parts_number:
+            queryset = queryset.filter(
+                Q(partNumber=parts_number) | 
+                Q(part1=parts_number) |
+                Q(part2=parts_number) |
+                Q(part3=parts_number) |
+                Q(part4=parts_number) |
+                Q(part5=parts_number) |
+                Q(part6=parts_number)
+            )
+        return queryset
 
 # Import Inspection API
 class ImportInspectionPagination(PageNumberPagination):
