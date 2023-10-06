@@ -28,11 +28,17 @@ class BOM(models.Model):
     partNumber = models.CharField(max_length=30)
     productName = models.CharField(max_length=400)
     part1 = models.CharField(max_length=30)
+    USAGE1 = models.CharField(max_length=11)
     part2 = models.CharField(max_length=30)
+    USAGE2 = models.CharField(max_length=11)
     part3 = models.CharField(max_length=30)
+    USAGE3 = models.CharField(max_length=11)
     part4 = models.CharField(max_length=30)
+    USAGE4 = models.CharField(max_length=11)
     part5 = models.CharField(max_length=30)
+    USAGE5 = models.CharField(max_length=11)
     part6 = models.CharField(max_length=30)
+    USAGE6 = models.CharField(max_length=11)
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
@@ -54,3 +60,20 @@ class ImportInspection(models.Model):
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
         db_table = 'importInspection'
+
+
+
+class Assembly(models.Model):
+    id = models.AutoField(primary_key=True)
+    state = models.CharField(max_length=30)
+    partNumber = models.CharField(max_length=30)
+    quantity = models.IntegerField()
+    lotNo = models.CharField(max_length=30)
+    assemblyDate = models.DateTimeField()
+    assemblyPN =  models.CharField(max_length=30)
+    remainingQuantity = models.IntegerField()
+    Assembly_No = models.CharField(max_length=20)
+    
+    class Meta:
+        managed = False  # Remove this if you want Django to manage this table
+        db_table = 'assembly'

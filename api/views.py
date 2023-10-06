@@ -12,8 +12,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 
-from .models import ExternalWarhousing, BOM, ImportInspection
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, Assembly
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblySerializer
 
 from django.db.models import Q # For OR query
 
@@ -114,11 +114,17 @@ class BOMViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 Q(partNumber=parts_number) | 
                 Q(part1=parts_number) |
+                Q(USAGE1=parts_number) |
                 Q(part2=parts_number) |
+                Q(USAGE2=parts_number) |    
                 Q(part3=parts_number) |
+                Q(USAGE3=parts_number) |
                 Q(part4=parts_number) |
+                Q(USAGE4=parts_number) |
                 Q(part5=parts_number) |
-                Q(part6=parts_number)
+                Q(USAGE5=parts_number) |
+                Q(part6=parts_number) |
+                Q(USAGE6=parts_number)
             )
         return queryset
 
@@ -136,6 +142,28 @@ class ImportInspectionViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state',)
     pagination_class = ImportInspectionPagination # Pagination Before
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        page_size = self.request.query_params.get('page_size')
+
+        if page_size:
+            self.pagination_class.page_size = page_size
+
+        return queryset
+
+class AssemblyPagination(PageNumberPagination):
+    page_size = 10
+    page_query_param = 'page'
+    max_page_size = 10000000000
+
+
+class AssemblyViewSet(viewsets.ModelViewSet):
+    queryset = Assembly.objects.filter(state__in=["조립대기"]).order_by('id')
+    serializer_class = AssemblySerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('state',)
+    pagination_class = AssemblyPagination # Pagination Before
     
     def get_queryset(self):
         queryset = super().get_queryset()
