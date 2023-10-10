@@ -162,7 +162,7 @@ class AssemblyViewSet(viewsets.ModelViewSet):
     queryset = Assembly.objects.filter(state__in=["조립대기"]).order_by('id')
     serializer_class = AssemblySerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state',)
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo')
     pagination_class = AssemblyPagination # Pagination Before
     
     def get_queryset(self):
