@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 
-from .models import ExternalWarhousing, BOM, ImportInspection, Assembly
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction
 from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblySerializer
 
 from django.db.models import Q # For OR query
@@ -54,7 +54,7 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('warehousingDate',)
+    filterset_fields = ('warehousingDate', 'barcode')
     pagination_class = WareHousePagination
     
     @action(detail=False, methods=['GET'], url_path='check-barcode')
@@ -152,18 +152,18 @@ class ImportInspectionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-class AssemblyPagination(PageNumberPagination):
+class AssemblyInstructionPagination(PageNumberPagination):
     page_size = 10
     page_query_param = 'page'
     max_page_size = 10000000000
 
 
-class AssemblyViewSet(viewsets.ModelViewSet):
-    queryset = Assembly.objects.filter(state__in=["조립대기"]).order_by('id')
+class AssemblyInstructionViewSet(viewsets.ModelViewSet):
+    queryset = AssemblyInstruction.objects.filter(state__in=["조립대기"]).order_by('id')
     serializer_class = AssemblySerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo')
-    pagination_class = AssemblyPagination # Pagination Before
+    pagination_class = AssemblyInstructionPagination # Pagination Before
     
     def get_queryset(self):
         queryset = super().get_queryset()

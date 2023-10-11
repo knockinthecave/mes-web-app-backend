@@ -8,7 +8,7 @@ router = routers.DefaultRouter()
 router.register(r'warehouse', views.ExternalWarhousingViewSet)
 router.register(r'bom', views.BOMViewSet)
 router.register(r'importinspection', views.ImportInspectionViewSet)
-router.register(r'assembly', views.AssemblyViewSet)
+router.register(r'assembly-instruction', views.AssemblyInstructionViewSet)
 
 
 urlpatterns = [

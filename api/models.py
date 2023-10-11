@@ -6,7 +6,8 @@ class ExternalWarhousing(models.Model):
     id = models.AutoField(primary_key=True)
     state = models.CharField(max_length=30)
     partNumber = models.CharField(max_length=30)
-    quantity = models.IntegerField()  # Removed max_length for IntegerField
+    quantity = models.IntegerField()
+    remains = models.IntegerField()
     lotNo = models.CharField(max_length=30)
     warehousingDate = models.DateField()
     warehousingWorker = models.CharField(max_length=30)
@@ -63,17 +64,17 @@ class ImportInspection(models.Model):
 
 
 
-class Assembly(models.Model):
+class AssemblyInstruction(models.Model):
     id = models.AutoField(primary_key=True)
     state = models.CharField(max_length=30)
     partNumber = models.CharField(max_length=30)
     quantity = models.IntegerField()
     lotNo = models.CharField(max_length=30)
-    assemblyDate = models.DateTimeField()
-    assemblyPN =  models.CharField(max_length=30)
-    remainingQuantity = models.IntegerField()
-    Assembly_No = models.CharField(max_length=20)
+    instruction_date = models.DateField()
+    instructed_quantity = models.IntegerField()
+    remains = models.IntegerField()
+    product_no = models.CharField(max_length=30)
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
-        db_table = 'assembly'
+        db_table = 'assemblyInstruction'
