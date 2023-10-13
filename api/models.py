@@ -71,7 +71,7 @@ class AssemblyInstruction(models.Model):
     partNumber = models.CharField(max_length=30)
     quantity = models.IntegerField()
     lotNo = models.CharField(max_length=30)
-    instruction_date = models.DateField()
+    instruction_date = models.DateTimeField()
     instructed_quantity = models.IntegerField()
     remains = models.IntegerField()
     product_no = models.CharField(max_length=30)

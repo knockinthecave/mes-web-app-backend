@@ -56,7 +56,7 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo')
+    filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
     
     @action(detail=False, methods=['GET'], url_path='check-barcode')
@@ -172,7 +172,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     queryset = AssemblyInstruction.objects.filter(state__in=["조립대기"]).order_by('id')
     serializer_class = AssemblyInstructionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo')
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = AssemblyInstructionPagination # Pagination Before
     
     def get_queryset(self):
@@ -183,3 +183,14 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
             self.pagination_class.page_size = page_size
 
         return queryset
+    
+    @action(detail=False, methods=['get'])
+    def unique_product_nos(self, request):
+    # This queryset will return distinct combinations of instruction_date, product_no, and user_id.
+        unique_combinations = AssemblyInstruction.objects.values('instruction_date', 'product_no', 'user_id').distinct()
+
+    # If you still want to only return the unique product numbers but with the above distinction,
+    # you can extract only the 'product_no' values from the unique_combinations.
+        unique_product_nos = [{'product_no': item['product_no'], 'instruction_date': item['instruction_date']} for item in unique_combinations]
+    
+        return Response(unique_product_nos)
