@@ -18,7 +18,8 @@ class ExternalWarhousingSerializer(serializers.ModelSerializer):
             'warehouse_location',
             'lastState',
             'barcode',
-            'inputDateTime'
+            'inputDateTime',
+            'user_id'
         ]
         read_only_fields = ['id',]
 
@@ -61,7 +62,7 @@ class ImportInspectionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id',]
 
-class AssemblySerializer(serializers.ModelSerializer):
+class AssemblyInstructionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssemblyInstruction
         fields = [
@@ -73,7 +74,8 @@ class AssemblySerializer(serializers.ModelSerializer):
             'instruction_date',
             'instructed_quantity',
             'remains',
-            'product_no'
+            'product_no',
+            'user_id'
         ]
         read_only_fields = ['id',]
             

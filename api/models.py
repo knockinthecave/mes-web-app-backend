@@ -16,9 +16,10 @@ class ExternalWarhousing(models.Model):
     lastState = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100)
     inputDateTime = models.DateTimeField(auto_now_add=True)
+    user_id = models.CharField(max_length=100)
     
     class Meta:
-        managed = False  # Remove this if you want Django to manage this table
+        #managed = False  # Remove this if you want Django to manage this table
         db_table = 'external_warehousing'
 
 
@@ -74,6 +75,7 @@ class AssemblyInstruction(models.Model):
     instructed_quantity = models.IntegerField()
     remains = models.IntegerField()
     product_no = models.CharField(max_length=30)
+    user_id = models.CharField(max_length=100)
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table

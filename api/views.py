@@ -11,9 +11,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.authtoken.models import Token
 
 from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblySerializer
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer
 
 from django.db.models import Q # For OR query
 
@@ -29,7 +30,8 @@ def login_view(request):
 
         if user is not None:
             # Generate a token or set a session and return it
-            return Response({"message": "Successful login!"}, status=status.HTTP_200_OK)
+            return Response({"message": "Successful login!", 
+                             "username": username}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -54,7 +56,7 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('warehousingDate', 'barcode')
+    filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo')
     pagination_class = WareHousePagination
     
     @action(detail=False, methods=['GET'], url_path='check-barcode')
@@ -88,7 +90,15 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
         serializer = ExternalWarhousingSerializer(paginated_items, many=True)
     
         return paginator.get_paginated_response(serializer.data)
-
+    
+    @action(detail=True, methods=['PUT'], url_path='update-state')
+    def update_state(self, request, *args, **kwargs):
+        instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
+        serializer = ExternalWarhousingSerializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # BOM API 
@@ -160,7 +170,7 @@ class AssemblyInstructionPagination(PageNumberPagination):
 
 class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     queryset = AssemblyInstruction.objects.filter(state__in=["조립대기"]).order_by('id')
-    serializer_class = AssemblySerializer
+    serializer_class = AssemblyInstructionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo')
     pagination_class = AssemblyInstructionPagination # Pagination Before
