@@ -78,5 +78,22 @@ class AssemblyInstruction(models.Model):
     user_id = models.CharField(max_length=100)
     
     class Meta:
-        managed = False  # Remove this if you want Django to manage this table
+        managed = True  # Remove this if you want Django to manage this table
         db_table = 'assemblyInstruction'
+        
+
+class AssemblyCompleted(models.Model):
+    id = models.AutoField(primary_key=True)
+    state = models.CharField(max_length=30)
+    partNumber = models.CharField(max_length=30)
+    quantity = models.IntegerField()
+    lotNo = models.CharField(max_length=30)
+    completed_date = models.DateTimeField()
+    instructed_quantity = models.IntegerField()
+    remains = models.IntegerField()
+    product_no = models.CharField(max_length=30)
+    user_id = models.CharField(max_length=100)
+    
+    class Meta:
+        managed = True
+        db_table = 'assemblyCompleted'

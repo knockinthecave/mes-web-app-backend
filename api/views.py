@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer
 
 from django.db.models import Q # For OR query
 
@@ -23,7 +23,7 @@ from django.db.models import Q # For OR query
 @api_view(['POST'])
 def login_view(request):
     if request.method == 'POST':
-        username = request.data.get("username")
+        username = request.data.get("id")
         password = request.data.get("password")
         
         user = authenticate(username=username, password=password)
@@ -49,7 +49,6 @@ class RecentWarehousingPagination(PageNumberPagination):
     page_size = 5
     page_query_param = 'page'
     max_page_size = 10000000000
-    
     
     
 class ExternalWarhousingViewSet(viewsets.ModelViewSet):
@@ -162,11 +161,17 @@ class ImportInspectionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+
+# Assembly Instruction API
 class AssemblyInstructionPagination(PageNumberPagination):
     page_size = 10
     page_query_param = 'page'
     max_page_size = 10000000000
 
+
+class AssemblyInstructionProductsPagination(PageNumberPagination):
+    page_size = 3    
+    
 
 class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     queryset = AssemblyInstruction.objects.filter(state__in=["조립대기"]).order_by('id')
@@ -186,11 +191,79 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def unique_product_nos(self, request):
-    # This queryset will return distinct combinations of instruction_date, product_no, and user_id.
-        unique_combinations = AssemblyInstruction.objects.values('instruction_date', 'product_no', 'user_id').distinct()
+      # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
+      unique_combinations = AssemblyInstruction.objects.filter(state="조립대기").values('instruction_date', 'product_no', 'user_id').distinct()
 
-    # If you still want to only return the unique product numbers but with the above distinction,
-    # you can extract only the 'product_no' values from the unique_combinations.
-        unique_product_nos = [{'product_no': item['product_no'], 'instruction_date': item['instruction_date']} for item in unique_combinations]
+      # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
+      unique_product_nos = [{'product_no': item['product_no'], 'instruction_date': item['instruction_date']} for item in unique_combinations]
+      
+      # 페이지네이션 적용
+      #paginator = AssemblyInstructionProductsPagination()
+      #paginated_queryset = paginator.paginate_queryset(unique_product_nos, request, view=self)
+      #if paginated_queryset is not None:
+          #return paginator.get_paginated_response(paginated_queryset)
     
-        return Response(unique_product_nos)
+      return Response(unique_product_nos)
+
+    
+    @action(detail=True, methods=['PUT'], url_path='update-state')
+    def update_state(self, request, *args, **kwargs):
+        instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
+        serializer = AssemblyInstructionSerializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+ 
+# Assembly Completed API   
+class AssemblyCompletedPagination(PageNumberPagination):
+    page_size = 10
+    page_query_param = 'page'
+    max_page_size = 10000000000
+
+
+class AssemblyCompletedProductsPagination(PageNumberPagination):
+    page_size = 3    
+
+
+class AssemblyCompletedViewSet(viewsets.ModelViewSet):
+    queryset = AssemblyCompleted.objects.filter(state__in=["조립완료"]).order_by('id')
+    serializer_class = AssemblyCompletedSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id')
+    pagination_class = AssemblyCompletedPagination # Pagination Before
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        page_size = self.request.query_params.get('page_size')
+
+        if page_size:
+            self.pagination_class.page_size = page_size
+
+        return queryset
+    
+    @action(detail=True, methods=['PUT'], url_path='update-state')
+    def update_state(self, request, *args, **kwargs):
+        instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
+        serializer = AssemblyCompletedSerializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def unique_product_nos(self, request):
+      # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
+      unique_combinations = AssemblyCompleted.objects.filter(state="조립완료").values('completed_date', 'product_no', 'user_id').distinct()
+
+      # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
+      unique_product_nos = [{'product_no': item['product_no'], 'completed_date': item['completed_date']} for item in unique_combinations]
+
+      # 페이지네이션 적용
+      #paginator = AssemblyCompletedProductsPagination()
+      #paginated_queryset = paginator.paginate_queryset(unique_product_nos, request, view=self)
+      #if paginated_queryset is not None:
+          #return paginator.get_paginated_response(paginated_queryset)
+
+      return Response(unique_product_nos)
