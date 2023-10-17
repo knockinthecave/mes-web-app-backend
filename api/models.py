@@ -1,6 +1,46 @@
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.authtoken.models import Token
      
+# 로그인 
+class ExternalMember(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.CharField(max_length=30)
+    password = models.CharField(max_length=30)
+    username = models.CharField(max_length=30)
+    warehouse = models.CharField(max_length=30)
+    
+    class Meta:
+        managed = False
+        db_table = 'external_member'
 
+
+class ExternalMemberToken(models.Model):
+    key = models.CharField("Key", max_length=40, primary_key=True)
+    user = models.OneToOneField(
+        ExternalMember,
+        related_name='auth_token',
+        on_delete=models.CASCADE,
+        verbose_name="External Member"
+    )
+    created = models.DateTimeField("Created", auto_now_add=True)
+    expires_at = models.DateTimeField("Expires At", null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+            self.expires_at = timezone.now() + timedelta(hours=24)  # 예시로 24시간 후 만료
+        return super().save(*args, **kwargs)
+
+    def generate_key(self):
+        return Token.generate_key()
+
+    class Meta:
+        unique_together = (('user', 'key'),)
+
+ 
+ 
 # 입고 목록 조회 (Warehousing list inquiry)
 class ExternalWarhousing(models.Model):
     id = models.AutoField(primary_key=True)
@@ -19,7 +59,7 @@ class ExternalWarhousing(models.Model):
     user_id = models.CharField(max_length=100)
     
     class Meta:
-        #managed = False  # Remove this if you want Django to manage this table
+        managed = False  # Remove this if you want Django to manage this table
         db_table = 'external_warehousing'
 
 
@@ -76,9 +116,10 @@ class AssemblyInstruction(models.Model):
     remains = models.IntegerField()
     product_no = models.CharField(max_length=30)
     user_id = models.CharField(max_length=100)
+    total_instructed = models.IntegerField()
     
     class Meta:
-        managed = True  # Remove this if you want Django to manage this table
+        managed = False  # Remove this if you want Django to manage this table
         db_table = 'assemblyInstruction'
         
 
@@ -93,7 +134,9 @@ class AssemblyCompleted(models.Model):
     remains = models.IntegerField()
     product_no = models.CharField(max_length=30)
     user_id = models.CharField(max_length=100)
+    receive_check = models.CharField(max_length=10)
+    total_instructed = models.IntegerField()
     
     class Meta:
-        managed = True
+        managed = False
         db_table = 'assemblyCompleted'

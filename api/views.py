@@ -13,27 +13,40 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken
 from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer
 
 from django.db.models import Q # For OR query
 
 
-# Login API
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ExternalMember
+
 @api_view(['POST'])
 def login_view(request):
-    if request.method == 'POST':
-        username = request.data.get("id")
-        password = request.data.get("password")
+    user_id = request.data.get("user_id")
+    password = request.data.get("password")
+    
+    try:
+        user = ExternalMember.objects.get(user_id=user_id)
         
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            # Generate a token or set a session and return it
-            return Response({"message": "Successful login!", 
-                             "username": username}, status=status.HTTP_200_OK)
+        if user.password == password:
+            
+             # Generate or retrieve token for the user
+            token, created = ExternalMemberToken.objects.get_or_create(user=user)
+                       
+            return Response({
+                "message": "Successful login!", 
+                "user_id": user_id,
+                "username": user.username,
+                "token": token.key
+            }, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+            raise ExternalMember.DoesNotExist
+    except ExternalMember.DoesNotExist:
+        return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 

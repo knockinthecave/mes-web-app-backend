@@ -1,7 +1,19 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember
 
+class ExternalMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExternalMember
+        fields = [
+            'id',
+            'user_id',
+            'password',
+            'username',
+            'warehouse'
+        ]
+        read_only_fields = ['id',]
+    
 class ExternalWarhousingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExternalWarhousing
@@ -75,7 +87,8 @@ class AssemblyInstructionSerializer(serializers.ModelSerializer):
             'instructed_quantity',
             'remains',
             'product_no',
-            'user_id'
+            'user_id',
+            'total_instructed'
         ]
         read_only_fields = ['id',]
 
@@ -94,6 +107,8 @@ class AssemblyCompletedSerializer(serializers.ModelSerializer):
             'instructed_quantity',
             'remains',
             'product_no',
-            'user_id'
+            'user_id',
+            'receive_check',
+            'total_instructed'
         ]
         read_only_fields = ['id',]            
