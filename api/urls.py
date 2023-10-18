@@ -5,6 +5,7 @@ from . import views
 from rest_framework.authtoken.views import obtain_auth_token 
 
 router = routers.DefaultRouter()
+router.register(r'inventory', views.ExternalInventoryViewSet)
 router.register(r'warehouse', views.ExternalWarhousingViewSet)
 router.register(r'bom', views.BOMViewSet)
 router.register(r'importinspection', views.ImportInspectionViewSet)

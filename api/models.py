@@ -39,7 +39,22 @@ class ExternalMemberToken(models.Model):
     class Meta:
         unique_together = (('user', 'key'),)
 
- 
+
+# 창고 
+class ExternalInventory(models.Model):
+    id = models.AutoField(primary_key=True)
+    state = models.CharField(max_length=100)
+    partNumber = models.CharField(max_length=100)
+    quantity = models.IntegerField()
+    lotNo = models.CharField(max_length=100)
+    stock = models.IntegerField()
+    inputDateTime = models.DateTimeField()
+    user_id = models.CharField(max_length=100)
+    date_of_receipt = models.DateField()
+     
+    class Meta:
+        managed = False
+        db_table = 'external_inventory'
  
 # 입고 목록 조회 (Warehousing list inquiry)
 class ExternalWarhousing(models.Model):

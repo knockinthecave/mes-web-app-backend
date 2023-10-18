@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer
 
 from django.db.models import Q # For OR query
 
@@ -47,6 +47,56 @@ def login_view(request):
             raise ExternalMember.DoesNotExist
     except ExternalMember.DoesNotExist:
         return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# External Inventory API
+class ExternalInventoryPagination(PageNumberPagination):
+    page_size = 8
+    page_query_param = 'page'
+    max_page_size = 10000000000
+
+class ExternalInventoryViewSet(viewsets.ModelViewSet):
+    queryset = ExternalInventory.objects.all().order_by('inputDateTime')
+    serializer_class = ExternalInventorySerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('partNumber', 'lotNo', 'state', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
+    pagination_class = ExternalInventoryPagination
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        page_size = self.request.query_params.get('page_size')
+
+        if page_size:
+            self.pagination_class.page_size = page_size
+
+        return queryset
+    
+    @action(detail=False, methods=['PUT'], url_path='update-state')
+    def update_state(self, request, *args, **kwargs):
+        part_number = request.data.get('partNumber')
+        quantity = request.data.get('quantity')
+        lot_no = request.data.get('lotNo')
+        new_state = request.data.get('state')
+        new_stock = request.data.get('stock')
+
+        if not all([part_number, quantity, lot_no, new_state, new_stock]):
+            return Response({"error": "Missing required parameters."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Query the record(s) matching the criteria
+        instance = self.queryset.filter(partNumber=part_number, quantity=quantity, lotNo=lot_no).first()
+
+        if not instance:
+            return Response({"error": "No matching inventory record found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update state and remains
+        instance.state = new_state
+        instance.stock = new_stock
+        instance.save()
+
+        serializer = ExternalInventorySerializer(instance)  # Changed to the correct serializer name
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 
@@ -244,7 +294,7 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
     queryset = AssemblyCompleted.objects.filter(state__in=["조립완료"]).order_by('id')
     serializer_class = AssemblyCompletedSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id')
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'receive_check')
     pagination_class = AssemblyCompletedPagination # Pagination Before
     
     def get_queryset(self):
@@ -268,7 +318,7 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def unique_product_nos(self, request):
       # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
-      unique_combinations = AssemblyCompleted.objects.filter(state="조립완료").values('completed_date', 'product_no', 'user_id').distinct()
+      unique_combinations = AssemblyCompleted.objects.filter(state="조립완료", receive_check="X").values('completed_date', 'product_no', 'user_id').distinct()
 
       # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
       unique_product_nos = [{'product_no': item['product_no'], 'completed_date': item['completed_date']} for item in unique_combinations]
