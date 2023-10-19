@@ -106,7 +106,8 @@ class AssemblyInstructionSerializer(serializers.ModelSerializer):
             'remains',
             'product_no',
             'user_id',
-            'total_instructed'
+            'total_instructed', 
+            'work_num'
         ]
         read_only_fields = ['id',]
 
@@ -127,6 +128,7 @@ class AssemblyCompletedSerializer(serializers.ModelSerializer):
             'product_no',
             'user_id',
             'receive_check',
-            'total_instructed'
+            'total_instructed',
+            'work_num'
         ]
         read_only_fields = ['id',]            

@@ -132,6 +132,7 @@ class AssemblyInstruction(models.Model):
     product_no = models.CharField(max_length=30)
     user_id = models.CharField(max_length=100)
     total_instructed = models.IntegerField()
+    work_num = models.CharField(max_length=100)
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
@@ -151,6 +152,7 @@ class AssemblyCompleted(models.Model):
     user_id = models.CharField(max_length=100)
     receive_check = models.CharField(max_length=10)
     total_instructed = models.IntegerField()
+    work_num = models.CharField(max_length=100)
     
     class Meta:
         managed = False

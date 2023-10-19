@@ -59,7 +59,7 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
     queryset = ExternalInventory.objects.all().order_by('inputDateTime')
     serializer_class = ExternalInventorySerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber', 'lotNo', 'state', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
+    filterset_fields = ('partNumber', 'lotNo', 'state', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt', 'state')
     pagination_class = ExternalInventoryPagination
     
     def get_queryset(self):
@@ -71,31 +71,14 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
 
         return queryset
     
-    @action(detail=False, methods=['PUT'], url_path='update-state')
+    @action(detail=True, methods=['PUT'], url_path='update-state')
     def update_state(self, request, *args, **kwargs):
-        part_number = request.data.get('partNumber')
-        quantity = request.data.get('quantity')
-        lot_no = request.data.get('lotNo')
-        new_state = request.data.get('state')
-        new_stock = request.data.get('stock')
-
-        if not all([part_number, quantity, lot_no, new_state, new_stock]):
-            return Response({"error": "Missing required parameters."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Query the record(s) matching the criteria
-        instance = self.queryset.filter(partNumber=part_number, quantity=quantity, lotNo=lot_no).first()
-
-        if not instance:
-            return Response({"error": "No matching inventory record found"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Update state and remains
-        instance.state = new_state
-        instance.stock = new_stock
-        instance.save()
-
-        serializer = ExternalInventorySerializer(instance)  # Changed to the correct serializer name
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
+        serializer = ExternalInventorySerializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -237,7 +220,7 @@ class AssemblyInstructionProductsPagination(PageNumberPagination):
     
 
 class AssemblyInstructionViewSet(viewsets.ModelViewSet):
-    queryset = AssemblyInstruction.objects.filter(state__in=["조립대기"]).order_by('id')
+    queryset = AssemblyInstruction.objects.filter(state__in=["조립대기", "남은부품"]).order_by('id')
     serializer_class = AssemblyInstructionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id')
