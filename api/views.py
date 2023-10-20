@@ -158,7 +158,7 @@ class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all().order_by('id')
     serializer_class = BOMSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber',) # you had this, which is just for direct matches
+    filterset_fields = ('partNumber', 'part1', 'part2', 'part3', 'part4', 'part5', 'part6') # you had this, which is just for direct matches
     pagination_class = None # Pagination Before
     
     def get_queryset(self):
@@ -274,7 +274,7 @@ class AssemblyCompletedProductsPagination(PageNumberPagination):
 
 
 class AssemblyCompletedViewSet(viewsets.ModelViewSet):
-    queryset = AssemblyCompleted.objects.filter(state__in=["조립완료"]).order_by('id')
+    queryset = AssemblyCompleted.objects.filter(state__in=["조립완료", "남은부품"]).order_by('id')
     serializer_class = AssemblyCompletedSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'receive_check')
