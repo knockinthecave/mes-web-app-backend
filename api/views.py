@@ -121,20 +121,29 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='recent-warehousing')
     def recent_warehousing(self, request, *args, **kwargs):
         warehousing_date = request.query_params.get('warehousingDate')
+        user_id = request.query_params.get('user_id')
     
+        # Start with a query that fetches all objects
+        query = ExternalWarhousing.objects.all()
+
+        # Apply filters if the parameters are provided
         if warehousing_date:
-            recent_items = ExternalWarhousing.objects.filter(warehousingDate=warehousing_date).order_by('-inputDateTime')
-        else:
-            recent_items = ExternalWarhousing.objects.all().order_by('-inputDateTime')
+            query = query.filter(warehousingDate=warehousing_date)
+        if user_id:
+            query = query.filter(user_id=user_id)
+
+        # Order by inputDateTime
+        recent_items = query.order_by('-inputDateTime')
 
         # Apply pagination
         paginator = RecentWarehousingPagination()
         paginated_items = paginator.paginate_queryset(recent_items, request)
-        
+    
         # Serializing the paginated data
         serializer = ExternalWarhousingSerializer(paginated_items, many=True)
     
         return paginator.get_paginated_response(serializer.data)
+
     
     @action(detail=True, methods=['PUT'], url_path='update-state')
     def update_state(self, request, *args, **kwargs):
@@ -237,19 +246,21 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def unique_product_nos(self, request):
-      # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
-      unique_combinations = AssemblyInstruction.objects.filter(state="조립대기").values('instruction_date', 'product_no', 'user_id').distinct()
+        user_id = request.query_params.get('user_id', None)  # 요청에서 user_id 값을 가져옵니다.
 
-      # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
-      unique_product_nos = [{'product_no': item['product_no'], 'instruction_date': item['instruction_date']} for item in unique_combinations]
-      
-      # 페이지네이션 적용
-      #paginator = AssemblyInstructionProductsPagination()
-      #paginated_queryset = paginator.paginate_queryset(unique_product_nos, request, view=self)
-      #if paginated_queryset is not None:
-          #return paginator.get_paginated_response(paginated_queryset)
+        # 조립대기 상태를 필터링하고 user_id 값이 제공되면 해당 user_id도 필터링합니다.
+        query = AssemblyInstruction.objects.filter(state="조립대기")
     
-      return Response(unique_product_nos)
+        if user_id:
+            query = query.filter(user_id=user_id)  # user_id 값이 있으면 추가로 필터링합니다.
+
+        unique_combinations = query.values('instruction_date', 'product_no', 'user_id').distinct()
+
+        # unique_combinations에서 'product_no'와 'instruction_date'만 추출합니다.
+        unique_product_nos = [{'product_no': item['product_no'], 'instruction_date': item['instruction_date']} for item in unique_combinations]
+
+        return Response(unique_product_nos)
+
 
     
     @action(detail=True, methods=['PUT'], url_path='update-state')
@@ -300,12 +311,19 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def unique_product_nos(self, request):
+      user_id = request.query_params.get('user_id')
+      
+      # Filter by the state condition, user_id (if provided) and then get the distinct combinations of instruction_date, product_no, and user_id.
+      query = AssemblyCompleted.objects.filter(state="조립완료", receive_check="X")
+      
+      if user_id:
+            query = query.filter(user_id=user_id)
+            
       # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
-      unique_combinations = AssemblyCompleted.objects.filter(state="조립완료", receive_check="X").values('completed_date', 'product_no', 'user_id').distinct()
+      unique_combinations = query.values('completed_date', 'product_no', 'user_id').distinct()
 
       # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
       unique_product_nos = [{'product_no': item['product_no'], 'completed_date': item['completed_date']} for item in unique_combinations]
-
       # 페이지네이션 적용
       #paginator = AssemblyCompletedProductsPagination()
       #paginated_queryset = paginator.paginate_queryset(unique_product_nos, request, view=self)
