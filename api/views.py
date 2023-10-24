@@ -232,7 +232,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
     queryset = AssemblyInstruction.objects.filter(state__in=["조립대기", "남은부품"]).order_by('id')
     serializer_class = AssemblyInstructionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id')
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'product_no', 'instruction_date') # product_no filter 추가(231024)
     pagination_class = AssemblyInstructionPagination # Pagination Before
     
     def get_queryset(self):
@@ -288,7 +288,7 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
     queryset = AssemblyCompleted.objects.filter(state__in=["조립완료", "남은부품"]).order_by('id')
     serializer_class = AssemblyCompletedSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'receive_check')
+    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'receive_check', 'completed_date')
     pagination_class = AssemblyCompletedPagination # Pagination Before
     
     def get_queryset(self):

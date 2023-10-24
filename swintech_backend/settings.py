@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-wl*076=89pcn2nc&%w-+c2lupqp1)3c8)6#-^!88a=kgzr)s4=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -94,7 +94,9 @@ WSGI_APPLICATION = 'swintech_backend.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://192.168.0.149:3000" # React
+    "http://192.168.0.149:3000", # React
+    "http://211.170.81.145:3000"
+    
     
 ]
 # Database
