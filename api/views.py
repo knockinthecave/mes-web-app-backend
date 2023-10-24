@@ -15,6 +15,7 @@ from rest_framework.authtoken.models import Token
 
 from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory
 from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer
+from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
 
@@ -226,30 +227,30 @@ class AssemblyInstructionPagination(PageNumberPagination):
 
 class AssemblyInstructionProductsPagination(PageNumberPagination):
     page_size = 3    
-    
 
 class AssemblyInstructionViewSet(viewsets.ModelViewSet):
-    queryset = AssemblyInstruction.objects.filter(state__in=["조립대기", "남은부품"]).order_by('id')
+    queryset = AssemblyInstruction.objects.all().order_by('id')  # 기본 쿼리셋으로 변경
     serializer_class = AssemblyInstructionSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('state', 'partNumber', 'quantity', 'lotNo', 'user_id', 'product_no', 'instruction_date') # product_no filter 추가(231024)
-    pagination_class = AssemblyInstructionPagination # Pagination Before
-    
+    filterset_class = AssemblyInstructionFilter  # 이 부분을 추가합니다.
+    pagination_class = AssemblyInstructionPagination
+
     def get_queryset(self):
-        queryset = super().get_queryset()
         page_size = self.request.query_params.get('page_size')
+        queryset = super().get_queryset()
 
         if page_size:
             self.pagination_class.page_size = page_size
 
         return queryset
+
     
     @action(detail=False, methods=['get'])
     def unique_product_nos(self, request):
         user_id = request.query_params.get('user_id', None)  # 요청에서 user_id 값을 가져옵니다.
 
         # 조립대기 상태를 필터링하고 user_id 값이 제공되면 해당 user_id도 필터링합니다.
-        query = AssemblyInstruction.objects.filter(state="조립대기")
+        query = AssemblyInstruction.objects.filter(Q(state="조립대기"))
     
         if user_id:
             query = query.filter(user_id=user_id)  # user_id 값이 있으면 추가로 필터링합니다.
@@ -314,7 +315,7 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
       user_id = request.query_params.get('user_id')
       
       # Filter by the state condition, user_id (if provided) and then get the distinct combinations of instruction_date, product_no, and user_id.
-      query = AssemblyCompleted.objects.filter(state="조립완료", receive_check="X")
+      query = AssemblyCompleted.objects.filter(Q(state="조립완료") | Q(state="남은부품"), receive_check="X")
       
       if user_id:
             query = query.filter(user_id=user_id)
