@@ -80,7 +80,26 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
+    @action(detail=False, methods=['DELETE'], url_path='receive-cancel')
+    def receive_cancel(self, request, *args, **kwargs):
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        user_id = request.query_params.get('user_id')
+        
+        if not all([part_number, quantity, lot_no, user_id]):
+            return Response({"message": "All parameters are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find receipts and delete them
+        self.queryset.filter(
+            partNumber=part_number,
+            quantity=quantity,
+            lotNo=lot_no,
+            user_id=user_id
+        ).delete()
+        
+        return Response({'detail': 'Receipts deleted successfully.'}, status=status.HTTP_200_OK)
 
 
 
@@ -154,6 +173,26 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['DELETE'], url_path='receive-cancel')
+    def receive_cancel(self, request, *args, **kwargs):
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        user_id = request.query_params.get('user_id')
+        
+        if not all([part_number, quantity, lot_no, user_id]):
+            return Response({"message": "All parameters are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find receipts and delete them
+        self.queryset.filter(
+            partNumber=part_number,
+            quantity=quantity,
+            lotNo=lot_no,
+            user_id=user_id
+        ).delete()
+        
+        return Response({'detail': 'Receipts deleted successfully.'}, status=status.HTTP_200_OK)
 
 
 # BOM API 
