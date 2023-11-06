@@ -94,8 +94,8 @@ WSGI_APPLICATION = 'swintech_backend.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://192.168.0.149:3000", # React
-    "http://211.170.81.145:3000"
+    "http://192.168.0.149:3000", 
+    "http://211.170.81.145:3000",
     
     
 ]
@@ -105,7 +105,7 @@ CORS_ALLOWED_ORIGINS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'swintech_231020_backup',
+        'NAME': 'swintech_231106_backup',
         'USER': 'jcast',
         'PASSWORD': 'jnki1024',
         'HOST': '211.170.81.147',

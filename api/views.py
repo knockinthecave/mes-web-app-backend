@@ -18,6 +18,7 @@ from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInsp
 from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
+from django.db.models import Sum # For Sum query
 
 
 from rest_framework.decorators import api_view
@@ -72,6 +73,7 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
 
         return queryset
     
+    
     @action(detail=True, methods=['PUT'], url_path='update-state')
     def update_state(self, request, *args, **kwargs):
         instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
@@ -80,6 +82,7 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     
     @action(detail=False, methods=['DELETE'], url_path='receive-cancel')
     def receive_cancel(self, request, *args, **kwargs):
@@ -100,7 +103,20 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         ).delete()
         
         return Response({'detail': 'Receipts deleted successfully.'}, status=status.HTTP_200_OK)
-
+    
+    
+    @action(detail=False, methods=['GET'], url_path='stock-summary')
+    def stock_summary(self, request, *args, **kwargs):
+        user_id = request.query_params.get('user_id', None)
+        
+        # Start with all records, but if a user_id is provided, filter by it
+        queryset = self.queryset
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+        
+        stock_summary = queryset.values('partNumber').annotate(total_stock=Sum('stock')).order_by('partNumber')
+        
+        return Response(stock_summary, status=status.HTTP_200_OK)
 
 
 # Warehouse API    
@@ -212,24 +228,20 @@ class BOMViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        parts_number = self.request.query_params.get('partsNumber', None)
+        parts_numbers = self.request.query_params.getlist('partsNumber')
 
-        if parts_number:
-            queryset = queryset.filter(
-                Q(partNumber=parts_number) | 
-                Q(part1=parts_number) |
-                Q(USAGE1=parts_number) |
-                Q(part2=parts_number) |
-                Q(USAGE2=parts_number) |    
-                Q(part3=parts_number) |
-                Q(USAGE3=parts_number) |
-                Q(part4=parts_number) |
-                Q(USAGE4=parts_number) |
-                Q(part5=parts_number) |
-                Q(USAGE5=parts_number) |
-                Q(part6=parts_number) |
-                Q(USAGE6=parts_number)
-            )
+        if parts_numbers:
+            # 모든 parts_number에 대해 정확히 일치하는 BOM 객체를 필터링합니다.
+            for number in parts_numbers:
+                queryset = queryset.filter(
+                    Q(partNumber=number) | 
+                    Q(part1=number) |                     
+                    Q(part2=number) |                    
+                    Q(part3=number) |                   
+                    Q(part4=number) |                  
+                    Q(part5=number) |                    
+                    Q(part6=number) 
+                )
         return queryset
 
 # Import Inspection API
