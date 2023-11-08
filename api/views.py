@@ -327,7 +327,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
  
 # Assembly Completed API   
 class AssemblyCompletedPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 1000
     page_query_param = 'page'
     max_page_size = 10000000000
 
