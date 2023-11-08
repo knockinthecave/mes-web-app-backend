@@ -270,8 +270,11 @@ class ImportInspectionViewSet(viewsets.ModelViewSet):
 
 
 # Assembly Instruction API
+# 조립완료 처리 시 Pagination으로 인해 데이터를 10개 밖에 불러오지 못하여 Update가 안되는 문제가 있었습니다.
+# Pagination에서 page_size를 1000으로 설정하여 해결하였습니다.
+# 2023.11.08 수정
 class AssemblyInstructionPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 1000
     page_query_param = 'page'
     max_page_size = 10000000000
 
