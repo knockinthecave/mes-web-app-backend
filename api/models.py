@@ -99,7 +99,7 @@ class BOM(models.Model):
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
-        db_table = 'BOM'
+        db_table = 'BOM_web'
  
  
         
