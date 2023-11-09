@@ -137,15 +137,23 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo', 'user_id')
+    filterset_fields = ('warehousingDate', 'barcode', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
     
     def get_queryset(self):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
+        print(states)
+
+        # Q 객체를 사용하여 OR 조건을 적용합니다.
         if states:
-            queryset = queryset.filter(state__in=states)
+            q_objects = Q()  # 빈 Q 객체를 생성합니다.
+            for state in states:
+                q_objects |= Q(state=state)  # 각 state에 대해 OR 조건을 추가합니다.
+
+            queryset = queryset.filter(q_objects)
         return queryset
+        
 
     @action(detail=False, methods=['GET'], url_path='check-barcode')
     def check_barcode(self, request, *args, **kwargs):
