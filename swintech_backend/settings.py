@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+# 23.11.09 11:36 이성범
+# release-1.0.2 Released.
+# settings.py
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
