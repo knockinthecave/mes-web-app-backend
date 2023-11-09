@@ -132,7 +132,10 @@ class RecentWarehousingPagination(PageNumberPagination):
     page_query_param = 'page'
     max_page_size = 10000000000
     
-    
+
+# 23.11.09 17:29 수정
+# API Endpoint에 state를 여러개 적었을때, 계속해서 state를 한개로만 인식하여 filter가 충돌되는 문제가 발생.
+# filterset_fileds에서 state를 제거하고 get_queryset이라는 사용자 정의 필터링을 통해 해결. 
 class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
