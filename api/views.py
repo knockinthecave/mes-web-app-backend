@@ -132,23 +132,24 @@ class RecentWarehousingPagination(PageNumberPagination):
     page_query_param = 'page'
     max_page_size = 10000000000
     
-    
+
+# 23.11.09 17:29 수정
+# API Endpoint에 state를 여러개 적었을때, 계속해서 state를 한개로만 인식하여 filter가 충돌되는 문제가 발생.
+# filterset_fileds에서 state를 제거하고 get_queryset이라는 사용자 정의 필터링을 통해 해결. 
 class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     queryset = ExternalWarhousing.objects.all().order_by('inputDateTime')
     serializer_class = ExternalWarhousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo', 'user_id')
+    filterset_fields = ('warehousingDate', 'barcode', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
-        
-    # 2023.11.08 Add 
-    # get_queryset 함수 추가
-    # state 필터링을 통해 AssemblyInstruction에서 남은부품과 입고상태의 부품을 필터링 하기 위함.
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
         if states:
             queryset = queryset.filter(state__in=states)
         return queryset
+        
 
     @action(detail=False, methods=['GET'], url_path='check-barcode')
     def check_barcode(self, request, *args, **kwargs):
