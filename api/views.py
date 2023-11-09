@@ -140,6 +140,13 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        states = self.request.query_params.getlist('state')
+        if states:
+            queryset = queryset.filter(state__in=states)
+        return queryset
+
     @action(detail=False, methods=['GET'], url_path='check-barcode')
     def check_barcode(self, request, *args, **kwargs):
         barcode = request.query_params.get('barcode')
