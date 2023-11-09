@@ -139,7 +139,10 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('warehousingDate', 'barcode', 'state', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
-    
+        
+    # 2023.11.08 Add 
+    # get_queryset 함수 추가
+    # state 필터링을 통해 AssemblyInstruction에서 남은부품과 입고상태의 부품을 필터링 하기 위함.
     def get_queryset(self):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
