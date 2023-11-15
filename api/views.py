@@ -52,8 +52,10 @@ def login_view(request):
 
 
 # External Inventory API
+# 23.11.15 이성범 수정 (branch : feature/warehouse)
+# page_size 수정 => 창고조회 페이지에서 조회할 페이지 사이즈 8개가 아닌 10개로 수정
 class ExternalInventoryPagination(PageNumberPagination):
-    page_size = 8
+    page_size = 10
     page_query_param = 'page'
     max_page_size = 10000000000
 
