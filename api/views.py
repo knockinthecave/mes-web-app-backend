@@ -59,21 +59,28 @@ class ExternalInventoryPagination(PageNumberPagination):
     page_query_param = 'page'
     max_page_size = 10000000000
 
+# 23.11.16 이성범 수정.
+# get_queryset에서 filter를 state 와 page_size로 창고조회 페이지에서 남은부품, 입고 상태만 보여줄 수 있도록 함. (= 조립완료 상태일 때는 현재수량 0)
 class ExternalInventoryViewSet(viewsets.ModelViewSet):
     queryset = ExternalInventory.objects.all().order_by('inputDateTime')
     serializer_class = ExternalInventorySerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber', 'lotNo', 'state', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt', 'state')
+    filterset_fields = ('partNumber', 'lotNo', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
     pagination_class = ExternalInventoryPagination
     
     def get_queryset(self):
         queryset = super().get_queryset()
+        states = self.request.query_params.getlist('state')
         page_size = self.request.query_params.get('page_size')
+
+        if states:
+            queryset = queryset.filter(state__in=states)
 
         if page_size:
             self.pagination_class.page_size = page_size
 
         return queryset
+
     
     
     @action(detail=True, methods=['PUT'], url_path='update-state')
