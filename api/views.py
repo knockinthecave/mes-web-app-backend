@@ -126,6 +126,23 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         stock_summary = queryset.values('partNumber').annotate(total_stock=Sum('stock')).order_by('partNumber')
         
         return Response(stock_summary, status=status.HTTP_200_OK)
+    
+    # 23.11.23 이성범 수정
+    # 작업지시 페이지에서 바코드 제출 시 state=입고 일 경우에 대한 처리
+    # 바코드에 있는 제품번호가 창고에 남은부품이 존재하는지 COUNT를 Response로 제공하는 API
+    @action(detail=False, methods=['GET'], url_path='remain-check')
+    def remain_check(self, request, *args, **kwargs):
+        part_number = request.query_params.get('partNumber')
+        user_id = request.query_params.get('user_id')
+        if not part_number:
+            return Response({'error': 'Part number is required'}, status=400)
+
+        # Query to count remaining parts for the given part number
+        remaining_count = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state='남은부품').count()
+
+        return Response({'partNumber': part_number, 'remainingCount': remaining_count})
+        
+        
 
 
 # Warehouse API    
