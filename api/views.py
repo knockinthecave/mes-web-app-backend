@@ -52,26 +52,35 @@ def login_view(request):
 
 
 # External Inventory API
+# 23.11.15 이성범 수정 (branch : feature/warehouse)
+# page_size 수정 => 창고조회 페이지에서 조회할 페이지 사이즈 8개가 아닌 10개로 수정
 class ExternalInventoryPagination(PageNumberPagination):
-    page_size = 8
+    page_size = 10
     page_query_param = 'page'
     max_page_size = 10000000000
 
+# 23.11.16 이성범 수정.
+# get_queryset에서 filter를 state 와 page_size로 창고조회 페이지에서 남은부품, 입고 상태만 보여줄 수 있도록 함. (= 조립완료 상태일 때는 현재수량 0)
 class ExternalInventoryViewSet(viewsets.ModelViewSet):
     queryset = ExternalInventory.objects.all().order_by('inputDateTime')
     serializer_class = ExternalInventorySerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber', 'lotNo', 'state', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt', 'state')
+    filterset_fields = ('partNumber', 'lotNo', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
     pagination_class = ExternalInventoryPagination
     
     def get_queryset(self):
         queryset = super().get_queryset()
+        states = self.request.query_params.getlist('state')
         page_size = self.request.query_params.get('page_size')
+
+        if states:
+            queryset = queryset.filter(state__in=states)
 
         if page_size:
             self.pagination_class.page_size = page_size
 
         return queryset
+
     
     
     @action(detail=True, methods=['PUT'], url_path='update-state')
@@ -117,6 +126,23 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         stock_summary = queryset.values('partNumber').annotate(total_stock=Sum('stock')).order_by('partNumber')
         
         return Response(stock_summary, status=status.HTTP_200_OK)
+    
+    # 23.11.23 이성범 수정
+    # 작업지시 페이지에서 바코드 제출 시 state=입고 일 경우에 대한 처리
+    # 바코드에 있는 제품번호가 창고에 남은부품이 존재하는지 COUNT를 Response로 제공하는 API
+    @action(detail=False, methods=['GET'], url_path='remain-check')
+    def remain_check(self, request, *args, **kwargs):
+        part_number = request.query_params.get('partNumber')
+        user_id = request.query_params.get('user_id')
+        if not part_number:
+            return Response({'error': 'Part number is required'}, status=400)
+
+        # Query to count remaining parts for the given part number
+        remaining_count = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state='남은부품').count()
+
+        return Response({'partNumber': part_number, 'remainingCount': remaining_count})
+        
+        
 
 
 # Warehouse API    

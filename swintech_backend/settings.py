@@ -10,10 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-# 23.11.09 11:36 이성범
-# release-1.0.2 Released.
-# settings.py
-
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -109,7 +105,7 @@ CORS_ALLOWED_ORIGINS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'swintech',
+        'NAME': 'swintech_231106_backup',
         'USER': 'jcast',
         'PASSWORD': 'jnki1024',
         'HOST': '211.170.81.147',
