@@ -95,9 +95,7 @@ WSGI_APPLICATION = 'swintech_backend.wsgi.application'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://192.168.0.149:3000", 
-    "http://211.170.81.145:3000",
-    
-    
+    "http://211.170.81.145:3000",    
 ]
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
