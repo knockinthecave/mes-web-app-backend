@@ -356,8 +356,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
 
         return Response(unique_product_nos)
 
-
-    
+ 
     @action(detail=True, methods=['PUT'], url_path='update-state')
     def update_state(self, request, *args, **kwargs):
         instance = self.get_object()  # 현재 id에 해당하는 인스턴스 가져오기
@@ -366,6 +365,24 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    # 23.12.27 이성범 수정
+    # filter-work-num API 추가
+    # 작업번호로 필터링을 한 후 하우징 부품번호를 param으로 받아 해당하는 부품을 제외시킨 후 Response
+    # Front 단에서는 데이터를 받아와 렌더링만 하면됨.
+    @action(detail=False, methods=['GET'], url_path='filter-work-num')
+    def filter_by_work_num(self, request):
+        work_num = request.query_params.get('work_num')
+        part_number = request.query_params.get('partNumber')
+        
+        if not work_num:
+            return Response({'error': 'Work number is required'}, status=400)
+        
+        query = AssemblyInstruction.objects.filter(work_num=work_num).exclude(partNumber=part_number)
+        
+        serializer = AssemblyInstructionSerializer(query, many=True)
+        return Response(serializer.data)
     
  
 # Assembly Completed API   
