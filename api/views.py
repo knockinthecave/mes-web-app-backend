@@ -19,6 +19,8 @@ from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
 from django.db.models import Sum # For Sum query
+from django.db.models import Count # For Count query
+from django.db.models import F # For F query
 
 
 from rest_framework.decorators import api_view
@@ -384,7 +386,41 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         serializer = AssemblyInstructionSerializer(query, many=True)
         return Response(serializer.data)
     
- 
+    
+    @action(detail=False, methods=['GET'], url_path='grouped-partial-assembly')
+    def grouped_partial_assembly(self, request):
+        # user_id 파라미터 추출
+        user_id = request.query_params.get('user_id', None)
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=400)
+
+        # '일부조립완료' 상태이며 해당 user_id를 가진 데이터 필터링
+        partial_assembly_qs = AssemblyInstruction.objects.filter(user_id=user_id, state="일부조립완료")
+
+        # 각 part_number에 대한 집계 데이터
+        grouped_data = []
+        for item in partial_assembly_qs:
+            part_number = item.partNumber
+
+            # 현재 part_number에 해당하는 current_count 계산
+            current_count = AssemblyInstruction.objects.filter(user_id=user_id, partNumber=part_number, state="일부조립완료").count()
+
+            # 같은 work_num이면서 partNumber가 같고, state가 '조립대기'인 데이터 계산
+            remaining_count = AssemblyInstruction.objects.filter(user_id=user_id, work_num=item.work_num, partNumber=part_number, state="조립대기").count()
+
+            # 집계 데이터 추가
+            grouped_data.append({
+                'product_no': item.product_no,
+                'part_number': part_number,
+                'current_count': current_count,
+                'remaining_count': remaining_count
+            })
+
+        # Serialize and return the response
+        return Response(grouped_data)
+
+    
+     
 # Assembly Completed API   
 class AssemblyCompletedPagination(PageNumberPagination):
     page_size = 1000
@@ -443,3 +479,16 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
           #return paginator.get_paginated_response(paginated_queryset)
 
       return Response(unique_product_nos)
+    
+    @action(detail=False, methods=['GET'], url_path='grouped-partial-completed')
+    def grouped_partial_completed(self, request):
+        
+        user_id = request.query_params.get('user_id')
+        
+        queryset = AssemblyCompleted.objects.filter(state="일부조립완료", user_id=user_id)
+        
+        grouped_data = queryset.values('product_no').annotate(count=Count('id'))
+        
+        response_data = [{'product_no': item['product_no'], 'count': item['count']} for item in grouped_data]
+        
+        return Response(response_data)
