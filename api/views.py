@@ -492,3 +492,18 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
         response_data = [{'product_no': item['product_no'], 'count': item['count']} for item in grouped_data]
         
         return Response(response_data)
+    
+    @action(detail=False, methods=['GET'], url_path='check-partial-completed-is-exist')
+    def check_partial_completed_is_exist(self, request):
+        partNumber = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lotNo = request.query_params.get('lotNo')
+        user_id = request.query_params.get('user_id')
+        
+        if not all([partNumber, quantity, lotNo]):
+            return Response({'error': 'Invalid Barcode. Please Check.'}, status=400)
+        
+        # Check if there is a record with the given product_no and user_id
+        exists = AssemblyCompleted.objects.filter(state="일부조립완료", partNumber=partNumber, quantity=quantity, lotNo=lotNo, user_id=user_id).exists()
+        
+        return Response({'exists': exists})
