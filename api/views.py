@@ -282,6 +282,21 @@ class BOMViewSet(viewsets.ModelViewSet):
                     Q(part6=number) 
                 )
         return queryset
+    
+    # 24.01.10 이성범 수정
+    # 일부조립완료 페이지에서 바코드 제출 시 부품이 하우징인지 아닌지 체크하는 API Endpoint 추가
+    @action(detail=False, methods=['GET'], url_path='check-is-housing-part')
+    def check_is_housing_part(self, request):
+        part_number = request.query_params.get('partNumber')
+        
+        if not part_number:
+            return Response({'error': 'Part number is required'}, status=400)
+        
+        # Check if the part_number is in the BOM table
+        isHousingPart = BOM.objects.filter(part1=part_number).exists()
+        
+        return Response({'isHousingPart': isHousingPart})
+    
 
 # Import Inspection API
 class ImportInspectionPagination(PageNumberPagination):
@@ -398,26 +413,32 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         partial_assembly_qs = AssemblyInstruction.objects.filter(user_id=user_id, state="일부조립완료")
 
         # 각 part_number에 대한 집계 데이터
-        grouped_data = []
+        grouped_data = {}
+        
         for item in partial_assembly_qs:
             part_number = item.partNumber
-
-            # 현재 part_number에 해당하는 current_count 계산
-            current_count = AssemblyInstruction.objects.filter(user_id=user_id, partNumber=part_number, state="일부조립완료").count()
-
-            # 같은 work_num이면서 partNumber가 같고, state가 '조립대기'인 데이터 계산
+            
+            # Initialize the part_number key if not already present
+            if part_number not in grouped_data:
+                grouped_data[part_number] = {
+                    'product_no' : item.product_no,
+                    'part_number': part_number,
+                    'current_count' : 0,
+                    'remaining_count' : 0, 
+                    'work_num' : item.work_num
+                }
+            
+            # Increment current_count for the part_number
+            grouped_data[part_number]['current_count'] += 1
+            
+            # Calculate and add to remaining_count for the part_number
             remaining_count = AssemblyInstruction.objects.filter(user_id=user_id, work_num=item.work_num, partNumber=part_number, state="조립대기").count()
-
-            # 집계 데이터 추가
-            grouped_data.append({
-                'product_no': item.product_no,
-                'part_number': part_number,
-                'current_count': current_count,
-                'remaining_count': remaining_count
-            })
-
-        # Serialize and return the response
-        return Response(grouped_data)
+            grouped_data[part_number]['remaining_count'] += remaining_count
+            
+        # Convert the dictionary to a list for serialization
+        serialized_data = list(grouped_data.values())
+            
+        return Response(serialized_data)
 
     
      
