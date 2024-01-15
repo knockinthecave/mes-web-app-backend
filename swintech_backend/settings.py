@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-wl*076=89pcn2nc&%w-+c2lupqp1)3c8)6#-^!88a=kgzr)s4='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -111,6 +111,18 @@ DATABASES = {
     }
 }
 
+# 24.01.15 이성범 수정
+# 기본 로깅 구성
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False, # 기존 로거 비활성화 여부
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler", # 파일로 로그를 출력하는 핸들러 클래스
+            "filename": "swintech_log.log", # 로그 파일 경로
+        },
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
