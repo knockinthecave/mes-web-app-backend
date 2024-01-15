@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs
 
 class ExternalMemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -132,3 +132,15 @@ class AssemblyCompletedSerializer(serializers.ModelSerializer):
             'work_num'
         ]
         read_only_fields = ['id',]            
+        
+
+class WebLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebLogs
+        fields = [
+            'id',
+            'user_id',
+            'log',
+            'log_date'
+        ]
+        read_only_fields = ['id',]

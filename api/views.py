@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer
 from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
@@ -529,3 +529,23 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
         exists = AssemblyCompleted.objects.filter(state="일부조립완료", partNumber=partNumber, quantity=quantity, lotNo=lotNo, user_id=user_id).exists()
         
         return Response({'exists': exists})
+    
+    
+
+class WebLogsViewSet(viewsets.ModelViewSet):
+    queryset = WebLogs.objects.filter().order_by('id')
+    serializer_class = WebLogsSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('id', 'user_id', 'log', 'log_date')
+    
+    @action(detail=False, methods=['POST'], url_path='upload-log')
+    def upload_log(self, request):
+        user_id = request.data.get('user_id')
+        log = request.data.get('log')
+        
+        if not all([user_id, log]):
+            return Response({'error': 'user_id and log are required'}, status=400)
+        
+        WebLogs.objects.create(user_id=user_id, log=log)
+        
+        return Response({'detail': 'Log uploaded successfully.'}, status=200)

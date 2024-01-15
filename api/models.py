@@ -157,3 +157,14 @@ class AssemblyCompleted(models.Model):
     class Meta:
         managed = False
         db_table = 'assemblyCompleted'
+        
+
+class WebLogs(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.CharField(max_length=100)
+    log = models.CharField(max_length=100)
+    log_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        managed = False
+        db_table = 'web_logs'
