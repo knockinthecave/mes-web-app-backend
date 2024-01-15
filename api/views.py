@@ -28,6 +28,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import ExternalMember
 
+
 @api_view(['POST'])
 def login_view(request):
     user_id = request.data.get("user_id")

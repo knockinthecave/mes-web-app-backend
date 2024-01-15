@@ -11,9 +11,15 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Log Directory Setup
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR)
 
 
 # Quick-start development settings - unsuitable for production
@@ -70,6 +76,9 @@ MIDDLEWARE = [
     
     # CORS
     'corsheaders.middleware.CorsMiddleware',
+    
+    # LOGGING
+    'api.middleware.RequestLogMiddleware',
 ]
 
 ROOT_URLCONF = 'swintech_backend.urls'
@@ -114,12 +123,27 @@ DATABASES = {
 # 24.01.15 이성범 수정
 # 기본 로깅 구성
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False, # 기존 로거 비활성화 여부
-    "handlers": {
-        "file": {
-            "class": "logging.FileHandler", # 파일로 로그를 출력하는 핸들러 클래스
-            "filename": "swintech_log.log", # 로그 파일 경로
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/api_requests.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'api.request': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }
