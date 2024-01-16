@@ -434,7 +434,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
             
             # Calculate and add to remaining_count for the part_number
             remaining_count = AssemblyInstruction.objects.filter(user_id=user_id, work_num=item.work_num, partNumber=part_number, state="조립대기").count()
-            grouped_data[part_number]['remaining_count'] += remaining_count
+            grouped_data[part_number]['remaining_count'] = remaining_count
             
         # Convert the dictionary to a list for serialization
         serialized_data = list(grouped_data.values())
@@ -490,10 +490,10 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
             query = query.filter(user_id=user_id)
             
       # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
-      unique_combinations = query.values('completed_date', 'product_no', 'user_id').distinct()
+      unique_combinations = query.values('work_num', 'product_no', 'user_id').distinct()
 
       # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
-      unique_product_nos = [{'product_no': item['product_no'], 'completed_date': item['completed_date']} for item in unique_combinations]
+      unique_product_nos = [{'product_no': item['product_no'], 'work_num': item['work_num']} for item in unique_combinations]
       # 페이지네이션 적용
       #paginator = AssemblyCompletedProductsPagination()
       #paginated_queryset = paginator.paginate_queryset(unique_product_nos, request, view=self)
