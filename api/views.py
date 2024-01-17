@@ -558,7 +558,15 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('uid', 'state', 'partNumber', 'quantity', 'lotNo', 'warehousingDate', 'warehousingWorker', 'improvedItem', 'note', 'lastState')
     
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        return queryset
+    @action(detail=False, methods=['GET'], url_path='check-last-state')
+    def check_last_state(self, request):
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        
+        if not all([part_number, quantity, lot_no]):
+            return Response({'error': 'Invalid Barcode. Please Check.'}, status=400)
+        
+        exists = SwintechWarehousing.objects.filter(lastState='입고', partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
+        
+        return Response({'exists': exists})
