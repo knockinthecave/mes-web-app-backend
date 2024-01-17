@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, Packaging
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, PackagingSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, SwintechWarehousing
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, SwintechWarehousingSerializer, ExternalMemberSerializer
 from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
@@ -548,19 +548,17 @@ class WebLogsViewSet(viewsets.ModelViewSet):
         
         WebLogs.objects.create(user_id=user_id, log=log)
         
-        return Response({'detail': 'Log uploaded successfully.'}, status=200)
     
 
-
 # 24.01.17 이성범 수정
-# Packaging API TEST
-class PackagingViewSet(viewsets.ModelViewSet):
-    queryset = Packaging.objects.all().order_by('uid')
-    serializer_class = PackagingSerializer
+# warehousing 모델링 (Swintech MES 연동)
+class SwintechWarehousingViewSet(viewsets.ModelViewSet):
+    queryset = SwintechWarehousing.objects.filter().order_by('uid')
+    serializer_class = SwintechWarehousingSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('uid', 'inspectionNum', 'state')
+    filterset_fields = ('uid', 'state', 'partNumber', 'quantity', 'lotNo', 'warehousingDate', 'warehousingWorker', 'improvedItem', 'note', 'lastState')
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        
+
         return queryset
