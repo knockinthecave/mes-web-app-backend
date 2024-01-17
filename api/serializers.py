@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, Packaging
 
 class ExternalMemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,7 +57,7 @@ class BOMSerializer(serializers.ModelSerializer):
     class Meta:
         model = BOM
         fields = [
-            'id',
+            'uid',
             'no',
             'partNumber',
             'productName',
@@ -74,7 +74,7 @@ class BOMSerializer(serializers.ModelSerializer):
             'part6',
             'USAGE6'
         ]
-        read_only_fields = ['id',]
+        read_only_fields = ['uid',]
         
 class ImportInspectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -144,3 +144,30 @@ class WebLogsSerializer(serializers.ModelSerializer):
             'log_date'
         ]
         read_only_fields = ['id',]
+        
+        
+        
+# 24.01.17 이성범 수정
+# swintech Packaging id가 아닌 uid로 API 요청 가능한지 Test
+class PackagingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Packaging
+        fields = [
+            'uid',
+            'inspectionNum',
+            'state',
+            'assemblyPN',
+            'partNumber',
+            'quantity',
+            'lotNo',
+            'normalCount',
+            'boxCount',
+            'packagingCommitDate',
+            'packagingCommitWorker',
+            'note',
+            'packingCount',
+            'checkPackaging',
+            'visualInspectionWorker',
+            'visualInspectionCount'
+        ]
+        read_only_fields = ['uid',]

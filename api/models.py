@@ -80,7 +80,7 @@ class ExternalWarhousing(models.Model):
 
 
 class BOM(models.Model):
-    id = models.AutoField(primary_key=True)
+    uid = models.AutoField(primary_key=True)
     no = models.CharField(max_length=11)
     partNumber = models.CharField(max_length=30)
     productName = models.CharField(max_length=400)
@@ -99,7 +99,7 @@ class BOM(models.Model):
     
     class Meta:
         managed = False  # Remove this if you want Django to manage this table
-        db_table = 'BOM_web'
+        db_table = 'BOM'
  
  
         
@@ -168,3 +168,29 @@ class WebLogs(models.Model):
     class Meta:
         managed = False
         db_table = 'web_logs'
+
+
+
+# 24.01.17 이성범 수정
+# 외부 창고가 아닌 swintech 내부 창고에서 관리 가능한지 Test
+class Packaging(models.Model):
+    uid = models.AutoField(primary_key=True)
+    inspectionNum = models.CharField(max_length=30)
+    state = models.CharField(max_length=30)
+    assemblyPN = models.CharField(max_length=30)
+    partNumber = models.CharField(max_length=30)
+    quantity = models.IntegerField()
+    lotNo = models.CharField(max_length=30)
+    normalCount = models.IntegerField()
+    boxCount = models.IntegerField()
+    packagingCommitDate = models.DateTimeField()
+    packagingCommitWorker = models.CharField(max_length=30)
+    note = models.CharField(max_length=100)
+    packingCount = models.IntegerField()
+    checkPackaging = models.CharField(max_length=5)
+    visualInspectionWorker = models.CharField(max_length=255)
+    visualInspectionCount = models.IntegerField()
+    
+    class Meta:
+        managed = False
+        db_table = 'packaging'
