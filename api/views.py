@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, Packaging
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, PackagingSerializer
 from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
@@ -260,10 +260,10 @@ class BOMPagination(PageNumberPagination):
     
     
 class BOMViewSet(viewsets.ModelViewSet):
-    queryset = BOM.objects.all().order_by('id')
+    queryset = BOM.objects.all().order_by('uid')
     serializer_class = BOMSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber', 'part1', 'part2', 'part3', 'part4', 'part5', 'part6') # you had this, which is just for direct matches
+    filterset_fields = ('uid', 'partNumber', 'part1', 'part2', 'part3', 'part4', 'part5', 'part6') # you had this, which is just for direct matches
     pagination_class = None # Pagination Before
     
     def get_queryset(self):
@@ -549,3 +549,18 @@ class WebLogsViewSet(viewsets.ModelViewSet):
         WebLogs.objects.create(user_id=user_id, log=log)
         
         return Response({'detail': 'Log uploaded successfully.'}, status=200)
+    
+
+
+# 24.01.17 이성범 수정
+# Packaging API TEST
+class PackagingViewSet(viewsets.ModelViewSet):
+    queryset = Packaging.objects.all().order_by('uid')
+    serializer_class = PackagingSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('uid', 'inspectionNum', 'state')
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        return queryset

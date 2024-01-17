@@ -12,6 +12,7 @@ router.register(r'importinspection', views.ImportInspectionViewSet)
 router.register(r'assembly-instruction', views.AssemblyInstructionViewSet)
 router.register(r'assembly-completed', views.AssemblyCompletedViewSet)
 router.register(r'logs', views.WebLogsViewSet)
+router.register(r'packaging', views.PackagingViewSet)
 
 
 urlpatterns = [
