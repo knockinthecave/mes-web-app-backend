@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, Packaging
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, SwintechWarehousing
 
 class ExternalMemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -147,27 +147,19 @@ class WebLogsSerializer(serializers.ModelSerializer):
         
         
         
-# 24.01.17 이성범 수정
-# swintech Packaging id가 아닌 uid로 API 요청 가능한지 Test
-class PackagingSerializer(serializers.ModelSerializer):
+class SwintechWarehousingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Packaging
+        model = SwintechWarehousing
         fields = [
             'uid',
-            'inspectionNum',
             'state',
-            'assemblyPN',
             'partNumber',
             'quantity',
             'lotNo',
-            'normalCount',
-            'boxCount',
-            'packagingCommitDate',
-            'packagingCommitWorker',
+            'warehousingDate',
+            'warehousingWorker',
+            'improvedItem',
             'note',
-            'packingCount',
-            'checkPackaging',
-            'visualInspectionWorker',
-            'visualInspectionCount'
+            'lastState'
         ]
         read_only_fields = ['uid',]
