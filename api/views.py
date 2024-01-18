@@ -558,6 +558,7 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('uid', 'state', 'partNumber', 'quantity', 'lotNo', 'warehousingDate', 'warehousingWorker', 'improvedItem', 'note', 'lastState')
     
+    # 작업지시할때 바코드에서 partnumber, quantity, lotno를 추출하여 lastState가 입고인 데이터가 있는지 확인하는 API
     @action(detail=False, methods=['GET'], url_path='check-last-state')
     def check_last_state(self, request):
         part_number = request.query_params.get('partNumber')
