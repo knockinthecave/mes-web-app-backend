@@ -571,3 +571,18 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
         exists = SwintechWarehousing.objects.filter(lastState='입고', partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
         
         return Response({'exists': exists})
+   
+    
+    # 입고 시 바코드가 swintech에 존재하는지 확인하는 API
+    @action(detail=False, methods=['GET'], url_path='check-barcode-existence')
+    def check_barcode_existence(self, request):
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        
+        if not all([part_number, quantity, lot_no]):
+            return Response({'error': 'Invalid Barcode. Please Check.'}, status=400)
+        
+        exists = SwintechWarehousing.objects.filter(partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
+        
+        return Response({'exists': exists})
