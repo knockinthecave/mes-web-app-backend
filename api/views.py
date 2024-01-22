@@ -65,7 +65,9 @@ class ExternalInventoryPagination(PageNumberPagination):
 # 23.11.16 이성범 수정.
 # get_queryset에서 filter를 state 와 page_size로 창고조회 페이지에서 남은부품, 입고 상태만 보여줄 수 있도록 함. (= 조립완료 상태일 때는 현재수량 0)
 class ExternalInventoryViewSet(viewsets.ModelViewSet):
-    queryset = ExternalInventory.objects.all().order_by('inputDateTime')
+    # 24.01.22 이성범 수정
+    # external_inventory에서 데이터를 불러올때 입고날짜 순서가 아닌 lotNo순으로 부품을 정렬하여 부품을 불러오도록 수정
+    queryset = ExternalInventory.objects.all().order_by('lotNo')
     serializer_class = ExternalInventorySerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('partNumber', 'lotNo', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
@@ -558,6 +560,7 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('uid', 'state', 'partNumber', 'quantity', 'lotNo', 'warehousingDate', 'warehousingWorker', 'improvedItem', 'note', 'lastState')
     
+    # 작업지시할때 바코드에서 partnumber, quantity, lotno를 추출하여 lastState가 입고인 데이터가 있는지 확인하는 API
     @action(detail=False, methods=['GET'], url_path='check-last-state')
     def check_last_state(self, request):
         part_number = request.query_params.get('partNumber')
@@ -568,5 +571,20 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Invalid Barcode. Please Check.'}, status=400)
         
         exists = SwintechWarehousing.objects.filter(lastState='입고', partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
+        
+        return Response({'exists': exists})
+   
+    
+    # 입고 시 바코드가 swintech에 존재하는지 확인하는 API
+    @action(detail=False, methods=['GET'], url_path='check-barcode-existence')
+    def check_barcode_existence(self, request):
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        
+        if not all([part_number, quantity, lot_no]):
+            return Response({'error': 'Invalid Barcode. Please Check.'}, status=400)
+        
+        exists = SwintechWarehousing.objects.filter(partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
         
         return Response({'exists': exists})
