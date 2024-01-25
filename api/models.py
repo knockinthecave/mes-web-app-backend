@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework.authtoken.models import Token
+
+import pytz
      
 # 로그인 
 class ExternalMember(models.Model):
@@ -188,3 +190,24 @@ class SwintechWarehousing(models.Model):
     class Meta:
         managed = False
         db_table = 'warehousing'
+        
+        
+
+# 24.01.25 이성범 수정
+# sub_log 모델링
+class SubLog(models.Model):
+    id = models.AutoField(primary_key=True)
+    work_num = models.CharField(max_length=100)
+    before_state = models.CharField(max_length=100)
+    after_state = models.CharField(max_length=100)
+    log_date = models.DateTimeField(auto_now_add=True)
+    
+    # DB에서 log_date가 MES와 혼동이 오지 않도록 timezone을 한국으로 설정
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.log_date = timezone.now().astimezone(pytz.timezone('Asia/Seoul'))
+        super().save(*args, **kwargs)
+        
+    class Meta:
+        managed = False
+        db_table = 'sub_log'
