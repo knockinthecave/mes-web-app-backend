@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, SwintechWarehousing
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, SwintechWarehousing, SubLog
 
 class ExternalMemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -163,3 +163,16 @@ class SwintechWarehousingSerializer(serializers.ModelSerializer):
             'lastState'
         ]
         read_only_fields = ['uid',]
+        
+
+class SubLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubLog
+        fields = [
+            'id',
+            'work_num',
+            'before_state',
+            'after_state',
+            'log_date'
+        ]
+        read_only_fields = ['id',]

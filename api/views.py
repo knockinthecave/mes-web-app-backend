@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, SwintechWarehousing
-from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, SwintechWarehousingSerializer, ExternalMemberSerializer
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, SwintechWarehousing, SubLog
+from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, SwintechWarehousingSerializer, ExternalMemberSerializer, SubLogSerializer
 from .filters import AssemblyInstructionFilter
 
 from django.db.models import Q # For OR query
@@ -387,6 +387,29 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
+    # 24.01.25 이성범 수정
+    # SUB 페이지에서 SUB 상태인 객체 요청하는 API
+    @action(detail=False, methods=['GET'], url_path='sub-state')
+    def get_sub_state(self, request):
+        user_id = request.query_params.get('user_id')
+        sub_state_data = AssemblyInstruction.objects.filter(state='SUB', user_id=user_id)
+        
+        response_data = [
+            {
+                'state': item.state,
+                'partNumber': item.partNumber,
+                'quantity': item.quantity,
+                'lotNo': item.lotNo,
+                'product_no': item.product_no,
+                'user_id': item.user_id,
+                'work_num': item.work_num
+            }
+            for item in sub_state_data
+        ]
+        
+        return Response(response_data)
+    
+    
     # 23.12.27 이성범 수정
     # filter-work-num API 추가
     # 작업번호로 필터링을 한 후 하우징 부품번호를 param으로 받아 해당하는 부품을 제외시킨 후 Response
@@ -588,3 +611,24 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
         exists = SwintechWarehousing.objects.filter(partNumber=part_number, quantity=quantity, lotNo=lot_no).exists()
         
         return Response({'exists': exists})
+    
+
+
+class SubLogViewSet(viewsets.ModelViewSet):
+    queryset = SubLog.objects.filter().order_by('id')
+    serializer_class = SubLogSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('id', 'work_num', 'before_state', 'after_state', 'log_date')
+    
+    @action(detail=False, methods=['POST'], url_path='upload-log')
+    def upload_log(self, request):
+        work_num = request.data.get('work_num')
+        before_state = request.data.get('before_state')
+        after_state = request.data.get('after_state')
+        
+        if not all([work_num, before_state, after_state]):
+            return Response({'error': 'Essential data are not met.'}, status=400)
+        
+        sub_log = SubLog.objects.create(work_num=work_num, before_state=before_state, after_state=after_state)
+        
+        return Response(self.get_serializer(sub_log).data, status=status.HTTP_201_CREATED)

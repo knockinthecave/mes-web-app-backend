@@ -13,6 +13,7 @@ router.register(r'assembly-instruction', views.AssemblyInstructionViewSet)
 router.register(r'assembly-completed', views.AssemblyCompletedViewSet)
 router.register(r'logs', views.WebLogsViewSet)
 router.register(r'swintech-warehouse', views.SwintechWarehousingViewSet)
+router.register(r'sublog', views.SubLogViewSet)
 
 
 urlpatterns = [
