@@ -22,6 +22,7 @@ from django.db.models import Sum # For Sum query
 from django.db.models import Count # For Count query
 from django.db.models import F # For F query
 
+from django.core.exceptions import ValidationError
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -127,6 +128,9 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
         if user_id is not None:
             queryset = queryset.filter(user_id=user_id)
+            
+        # Filter stock to include only greater than 0
+        queryset = queryset.filter(stock__gt=0)
         
         stock_summary = queryset.values('partNumber').annotate(total_stock=Sum('stock')).order_by('partNumber')
         
@@ -146,6 +150,33 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         remaining_count = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state='남은부품').count()
 
         return Response({'partNumber': part_number, 'remainingCount': remaining_count})
+    
+    @action(detail=False, methods=['GET'], url_path='inventory-check')
+    def inventory_check(self, request, *args, **kwargs):
+        part_number = request.query_params.get('partNumber')
+        user_id = request.query_params.get('user_id')
+        if not part_number:
+            return Response({'error': 'Part number is required'}, status=400)
+        
+        result = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state__in=['입고', '남은부품'])
+        count = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state__in=['입고', '남은부품']).count()
+        
+        # Set up pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 5  # you can set any number you like here
+               
+        if not result.exists():
+          return Response({'error': 'No matching inventory found'}, status=404)
+      
+        try:
+            paginated_result = paginator.paginate_queryset(result, request)
+        except ValidationError as e:
+            return Response(e.messages, status=400)
+
+        serialized_result = ExternalInventorySerializer(result, many=True).data
+        
+        return Response({'count': count, 'results': serialized_result})
+               
         
         
 
