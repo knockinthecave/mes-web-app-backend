@@ -151,6 +151,9 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
 
         return Response({'partNumber': part_number, 'remainingCount': remaining_count})
     
+    
+    # 창고조회 페이지에서 상세부품 조회할 수 있는 API 엔드포인트
+    # Pagination을 통해 데이터 조회
     @action(detail=False, methods=['GET'], url_path='inventory-check')
     def inventory_check(self, request, *args, **kwargs):
         part_number = request.query_params.get('partNumber')
@@ -159,7 +162,6 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Part number is required'}, status=400)
         
         result = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state__in=['입고', '남은부품'])
-        count = ExternalInventory.objects.filter(partNumber=part_number, user_id=user_id, state__in=['입고', '남은부품']).count()
         
         # Set up pagination
         paginator = PageNumberPagination()
@@ -170,12 +172,12 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
       
         try:
             paginated_result = paginator.paginate_queryset(result, request)
+            serialized_result = ExternalInventorySerializer(paginated_result, many=True).data
+            return paginator.get_paginated_response(serialized_result)
+    
         except ValidationError as e:
             return Response(e.messages, status=400)
-
-        serialized_result = ExternalInventorySerializer(result, many=True).data
-        
-        return Response({'count': count, 'results': serialized_result})
+    
                
         
         
