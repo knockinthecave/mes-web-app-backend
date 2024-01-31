@@ -197,10 +197,13 @@ class SwintechWarehousing(models.Model):
 # sub_log 모델링
 class SubLog(models.Model):
     id = models.AutoField(primary_key=True)
-    work_num = models.CharField(max_length=100)
     before_state = models.CharField(max_length=100)
     after_state = models.CharField(max_length=100)
     log_date = models.DateTimeField(auto_now_add=True)
+    partNumber = models.CharField(max_length=100)
+    quantity = models.CharField(max_length=100)
+    lotNo = models.CharField(max_length=100)
+    user_id = models.CharField(max_length=100)
     
     # DB에서 log_date가 MES와 혼동이 오지 않도록 timezone을 한국으로 설정
     def save(self, *args, **kwargs):

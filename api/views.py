@@ -442,6 +442,21 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         
         return Response(response_data)
     
+    @action(detail=False, methods=['PUT'], url_path='update-sub-state')
+    def update_sub_state(self, request, *args, **kwargs):
+        partNumber = request.data.get('partNumber')
+        quantity = request.data.get('quantity')
+        lotNo = request.data.get('lotNo')
+        user_id = request.data.get('user_id')
+        
+        if not all([partNumber, quantity, lotNo, user_id]):
+            return Response({'error': 'partNumber, quantity, lotNo, user_id are required'}, status=400)
+        
+        # Update the state of the record with the given product_no and user_id
+        AssemblyInstruction.objects.filter(state="SUB", partNumber=partNumber, quantity=quantity, lotNo=lotNo, user_id=user_id).update(state="조립완료")
+        
+        return Response({'detail': 'State updated successfully.'}, status=status.HTTP_200_OK)
+    
     
     # 23.12.27 이성범 수정
     # filter-work-num API 추가
@@ -588,6 +603,21 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
         
         return Response({'exists': exists})
     
+    @action(detail=False, methods=['PUT'], url_path='update-sub-state')
+    def update_sub_state(self, request, *args, **kwargs):
+        partNumber = request.data.get('partNumber')
+        quantity = request.data.get('quantity')
+        lotNo = request.data.get('lotNo')
+        user_id = request.data.get('user_id')
+        
+        if not all([partNumber, quantity, lotNo, user_id]):
+            return Response({'error': 'partNumber, quantity, lotNo, user_id are required'}, status=400)
+        
+        # Update the state of the record with the given product_no and user_id
+        AssemblyCompleted.objects.filter(state="SUB", partNumber=partNumber, quantity=quantity, lotNo=lotNo, user_id=user_id).update(state="조립완료")
+        
+        return Response({'detail': 'State updated successfully.'}, status=status.HTTP_200_OK)
+    
     
 
 class WebLogsViewSet(viewsets.ModelViewSet):
@@ -647,21 +677,21 @@ class SwintechWarehousingViewSet(viewsets.ModelViewSet):
     
 
 
-class SubLogViewSet(viewsets.ModelViewSet):
+class SubLogViewSet(viewsets.ModelViewSet):    
     queryset = SubLog.objects.filter().order_by('id')
-    serializer_class = SubLogSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('id', 'work_num', 'before_state', 'after_state', 'log_date')
     
-    @action(detail=False, methods=['POST'], url_path='upload-log')
+    @action(detail=False, methods=['POST'], url_path='upload-log')   
     def upload_log(self, request):
-        work_num = request.data.get('work_num')
         before_state = request.data.get('before_state')
         after_state = request.data.get('after_state')
+        part_number = request.data.get('partNumber')
+        quantity = request.data.get('quantity')
+        lot_no = request.data.get('lotNo')
+        user_id = request.data.get('user_id')
         
-        if not all([work_num, before_state, after_state]):
+        if not all([part_number, quantity, lot_no, before_state, after_state, user_id]):
             return Response({'error': 'Essential data are not met.'}, status=400)
         
-        sub_log = SubLog.objects.create(work_num=work_num, before_state=before_state, after_state=after_state)
+        sub_log = SubLog.objects.create(partNumber=part_number, quantity=quantity, lotNo=lot_no, before_state=before_state, after_state=after_state, user_id=user_id)
         
-        return Response(self.get_serializer(sub_log).data, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Log upload successful'}, status=status.HTTP_201_CREATED)
