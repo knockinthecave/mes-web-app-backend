@@ -170,9 +170,12 @@ class SubLogSerializer(serializers.ModelSerializer):
         model = SubLog
         fields = [
             'id',
-            'work_num',
             'before_state',
             'after_state',
-            'log_date'
+            'log_date',
+            'partNumber',
+            'quantity',
+            'lotNo',
+            'user_id'         
         ]
         read_only_fields = ['id',]
