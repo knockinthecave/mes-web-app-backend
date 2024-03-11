@@ -71,7 +71,10 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
     queryset = ExternalInventory.objects.all().order_by('lotNo')
     serializer_class = ExternalInventorySerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ('partNumber', 'lotNo', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt')
+    
+    # 24.03.11 이성범 수정
+    # filterset_fields에 quantity 추가 : 품번이랑 로트번호만 같아도 중복된다고 인식되는 문제 해결.
+    filterset_fields = ('partNumber', 'lotNo', 'stock', 'inputDateTime', 'user_id', 'date_of_receipt', 'quantity')
     pagination_class = ExternalInventoryPagination
     
     def get_queryset(self):
