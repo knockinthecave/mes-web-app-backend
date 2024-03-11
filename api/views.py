@@ -81,12 +81,16 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
         page_size = self.request.query_params.get('page_size')
+        stock_gt = self.request.query_params.get('stock_gt', None)
 
         if states:
             queryset = queryset.filter(state__in=states)
 
         if page_size:
             self.pagination_class.page_size = page_size
+            
+        if stock_gt is not None:
+            queryset = queryset.filter(stock__gt=0)
 
         return queryset
 
