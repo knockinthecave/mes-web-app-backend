@@ -81,7 +81,7 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
         page_size = self.request.query_params.get('page_size')
-        stock_gt = self.request.query_params.get('stock_gt', None)
+        stock_filter = self.request.query_params.get('stock_filter', None)
 
         if states:
             queryset = queryset.filter(state__in=states)
@@ -89,7 +89,9 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
         if page_size:
             self.pagination_class.page_size = page_size
             
-        if stock_gt is not None:
+        # 24.03.11 이성범 수정
+        # stock_filter가 존재할 경우에만 stock이 0보다 큰 데이터만 필터링    
+        if stock_filter is not None:
             queryset = queryset.filter(stock__gt=0)
 
         return queryset
