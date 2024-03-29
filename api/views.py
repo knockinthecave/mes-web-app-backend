@@ -38,6 +38,9 @@ def login_view(request):
     try:
         user = ExternalMember.objects.get(user_id=user_id)
         
+        if user.user_id != user_id:
+            raise ExternalMember.DoesNotExist
+        
         if user.password == password:
             
              # Generate or retrieve token for the user
