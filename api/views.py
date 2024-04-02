@@ -575,9 +575,11 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
             query = query.filter(user_id=user_id)
             
       # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
+      # 24.04.02 -  completed_date 추가
       unique_combinations = query.values('work_num', 'product_no', 'user_id', 'completed_date').distinct()
 
       # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
+      # 24.04.02 - completed_date 추가
       unique_product_nos = [{'product_no': item['product_no'], 'work_num': item['work_num'], 'completed_date': item['completed_date']} for item in unique_combinations]
       # 페이지네이션 적용
       #paginator = AssemblyCompletedProductsPagination()
