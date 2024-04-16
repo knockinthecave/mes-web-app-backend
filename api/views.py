@@ -402,7 +402,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         return queryset
 
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['GET'])
     def unique_product_nos(self, request):
         user_id = request.query_params.get('user_id', None)  # 요청에서 user_id 값을 가져옵니다.
 
@@ -525,7 +525,23 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         serialized_data = list(grouped_data.values())
             
         return Response(serialized_data)
-
+    
+    # 24.04.16 이성범 수정
+    # 조립 지시 취소 기능 추가
+    @action(detail=False, methods=['DELETE'], url_path='delete-instructions')
+    def delete_instructions(self, request):
+        user_id = request.query_params.get('user_id')
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=400)
+        
+        # Delete all instructions for the user_id
+        AssemblyInstruction.objects.filter(user_id=user_id, partNumber=part_number, quantity=quantity, lotNo=lot_no).delete()
+        
+        return Response({'detail': 'Instructions deleted successfully.'}, status=status.HTTP_200_OK)
     
      
 # Assembly Completed API   
