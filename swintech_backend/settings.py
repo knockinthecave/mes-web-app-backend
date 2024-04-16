@@ -112,7 +112,7 @@ CORS_ALLOWED_ORIGINS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'swintech',
+        'NAME': 'swintech_240411_backup',
         'USER': 'jcast',
         'PASSWORD': 'Jnki1024$6',
         'HOST': '220.65.74.150',

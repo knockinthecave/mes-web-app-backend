@@ -402,7 +402,7 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         return queryset
 
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['GET'])
     def unique_product_nos(self, request):
         user_id = request.query_params.get('user_id', None)  # 요청에서 user_id 값을 가져옵니다.
 
@@ -525,7 +525,23 @@ class AssemblyInstructionViewSet(viewsets.ModelViewSet):
         serialized_data = list(grouped_data.values())
             
         return Response(serialized_data)
-
+    
+    # 24.04.16 이성범 수정
+    # 조립 지시 취소 기능 추가
+    @action(detail=False, methods=['DELETE'], url_path='delete-instructions')
+    def delete_instructions(self, request):
+        user_id = request.query_params.get('user_id')
+        part_number = request.query_params.get('partNumber')
+        quantity = request.query_params.get('quantity')
+        lot_no = request.query_params.get('lotNo')
+        
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=400)
+        
+        # Delete all instructions for the user_id
+        AssemblyInstruction.objects.filter(user_id=user_id, partNumber=part_number, quantity=quantity, lotNo=lot_no).delete()
+        
+        return Response({'detail': 'Instructions deleted successfully.'}, status=status.HTTP_200_OK)
     
      
 # Assembly Completed API   
@@ -575,9 +591,11 @@ class AssemblyCompletedViewSet(viewsets.ModelViewSet):
             query = query.filter(user_id=user_id)
             
       # Filter by the state condition and then get the distinct combinations of instruction_date, product_no, and user_id.
+      # 24.04.02 -  completed_date 추가
       unique_combinations = query.values('work_num', 'product_no', 'user_id', 'completed_date').distinct()
 
       # Extract only the 'product_no' and 'instruction_date' values from the unique_combinations.
+      # 24.04.02 - completed_date 추가
       unique_product_nos = [{'product_no': item['product_no'], 'work_num': item['work_num'], 'completed_date': item['completed_date']} for item in unique_combinations]
       # 페이지네이션 적용
       #paginator = AssemblyCompletedProductsPagination()
