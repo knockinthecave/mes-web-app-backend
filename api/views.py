@@ -27,35 +27,41 @@ from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import ExternalMember
 
-
+# 24.08.26 이성범 수정
+# Content : 로그인뷰 수정
+# Purpose : JWT 토큰 발행 및 인증 방식으로 변경
 @api_view(['POST'])
 def login_view(request):
-    user_id = request.data.get("user_id")
-    password = request.data.get("password")
-    
+    user_id = request.data.get('user_id')
+    password = request.data.get('password')
+
     try:
+        # ExternalMember에서 사용자 찾기
         user = ExternalMember.objects.get(user_id=user_id)
         
         if user.user_id != user_id:
             raise ExternalMember.DoesNotExist
-        
+
+        # 비밀번호 검증 
         if user.password == password:
-            
-             # Generate or retrieve token for the user
-            token, created = ExternalMemberToken.objects.get_or_create(user=user)
-                       
+            # JWT 토큰 생성
+            refresh = RefreshToken.for_user(user)
             return Response({
-                "message": "Successful login!", 
-                "user_id": user_id,
-                "username": user.username,
-                "token": token.key
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user_id': user.user_id,
+                'username': user.username,
+                'warehouse': user.warehouse,
             }, status=status.HTTP_200_OK)
         else:
-            raise ExternalMember.DoesNotExist
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     except ExternalMember.DoesNotExist:
-        return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 # External Inventory API
