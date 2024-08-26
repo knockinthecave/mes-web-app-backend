@@ -35,9 +35,8 @@ from .models import ExternalMember
 # Purpose : JWT 토큰 발행 및 인증 방식으로 변경
 @api_view(['POST'])
 def login_view(request):
-    user_id = request.data.get('user_id')
-    password = request.data.get('password')
-
+    user_id = request.data.get("user_id")
+    password = request.data.get("password")
     try:
         # ExternalMember에서 사용자 찾기
         user = ExternalMember.objects.get(user_id=user_id)
