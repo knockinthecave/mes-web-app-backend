@@ -1,3 +1,6 @@
+import logging
+
+from django.utils import timezone  # timezone 모듈 임포트
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django_filters import rest_framework as filters
@@ -13,7 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
 
-from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalMemberToken, ExternalInventory, WebLogs, SwintechWarehousing, SubLog
+from .models import ExternalWarhousing, BOM, ImportInspection, AssemblyInstruction, AssemblyCompleted, ExternalMember, ExternalInventory, WebLogs, SwintechWarehousing, SubLog
 from .serializers import ExternalWarhousingSerializer, BOMSerializer, ImportInspectionSerializer, AssemblyInstructionSerializer, AssemblyCompletedSerializer, ExternalInventorySerializer, WebLogsSerializer, SwintechWarehousingSerializer, ExternalMemberSerializer, SubLogSerializer
 from .filters import AssemblyInstructionFilter
 
@@ -28,7 +31,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import ExternalMember
+
+# Logger 설정
+logger = logging.getLogger(__name__)
 
 # 24.08.26 이성범 수정
 # Content : 로그인뷰 수정
@@ -37,17 +44,24 @@ from .models import ExternalMember
 def login_view(request):
     user_id = request.data.get("user_id")
     password = request.data.get("password")
+
+    print(f"입력된 user_id: {user_id}")
+    print(f"입력된 password: {password}")
+
     try:
         # ExternalMember에서 사용자 찾기
         user = ExternalMember.objects.get(user_id=user_id)
-        
-        if user.user_id != user_id:
-            raise ExternalMember.DoesNotExist
 
-        # 비밀번호 검증 
+        # 비밀번호를 평문으로 비교
         if user.password == password:
+            print(user_id, " log in success")
             # JWT 토큰 생성
             refresh = RefreshToken.for_user(user)
+
+            # last_login 필드 업데이트
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
@@ -56,9 +70,11 @@ def login_view(request):
                 'warehouse': user.warehouse,
             }, status=status.HTTP_200_OK)
         else:
+            print("비밀번호가 일치하지 않습니다.")
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     except ExternalMember.DoesNotExist:
+        print("사용자를 찾을 수 없습니다.")
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -138,8 +154,32 @@ class ExternalInventoryViewSet(viewsets.ModelViewSet):
     
     
     @action(detail=False, methods=['GET'], url_path='stock-summary')
-    def stock_summary(self, request, *args, **kwargs):
+    @permission_classes([IsAuthenticated])
+    def stock_summary(self, request, *args, **kwargs):     
+        # JWT 토큰 유무
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            print("Authorization 헤더가 없습니다.")
+            return Response({'detail': 'Authorization header missing'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        print(f"Authorization 헤더: {auth_header}")
+        
+        try:
+            token = auth_header.split(' ')[1]
+            jwt_auth = JWTAuthentication()
+            validated_token = jwt_auth.get_validated_token(token)
+            user = jwt_auth.get_user(validated_token)
+            print(f"유효한 토큰: {validated_token}")
+            print(f"인증된 사용자: {user.username} (ID: {user.id})")
+        except Exception as e:
+            print(f"토큰 검증 실패: {str(e)}")       
+            return Response({'detail': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        
         user_id = request.query_params.get('user_id', None)
+        
+        # 인증된 사용자의 정보를 로그에 출력
+        if request.user.is_authenticated:
+            print(f"User is authenticated: {request.user.username} (ID: {request.user.id})")
         
         # Start with all records, but if a user_id is provided, filter by it
         queryset = self.queryset
@@ -223,7 +263,7 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('warehousingDate', 'barcode', 'partNumber', 'quantity', 'lotNo', 'user_id')
     pagination_class = WareHousePagination
-    
+       
     def get_queryset(self):
         queryset = super().get_queryset()
         states = self.request.query_params.getlist('state')
@@ -281,6 +321,7 @@ class ExternalWarhousingViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     
     @action(detail=False, methods=['DELETE'], url_path='receive-cancel')
     def receive_cancel(self, request, *args, **kwargs):

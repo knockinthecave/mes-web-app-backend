@@ -29,7 +29,7 @@ if not os.path.exists(LOGS_DIR):
 SECRET_KEY = 'django-insecure-wl*076=89pcn2nc&%w-+c2lupqp1)3c8)6#-^!88a=kgzr)s4='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -92,6 +92,9 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    # CORS
+    'corsheaders.middleware.CorsMiddleware',
+    
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -100,8 +103,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    # CORS
-    'corsheaders.middleware.CorsMiddleware',
+    
     
     # LOGGING
     'api.middleware.RequestLogMiddleware',
@@ -127,11 +129,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'swintech_backend.wsgi.application'
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://192.168.0.149:3000", 
     "http://211.170.81.145:3000",    
 ]
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -216,3 +220,8 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'api.ExternalMember'
+
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
