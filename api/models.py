@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
@@ -6,41 +7,39 @@ from rest_framework.authtoken.models import Token
 import pytz
      
 # 로그인 
-class ExternalMember(models.Model):
+class ExternalMemberManager(BaseUserManager):
+    def create_user(self, user_id, password=None, **extra_fields):
+        if not user_id:
+            raise ValueError('The User ID must be set')
+        user = self.model(user_id=user_id, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, user_id, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        return self.create_user(user_id, password, **extra_fields)
+
+class ExternalMember(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
-    user_id = models.CharField(max_length=30)
-    password = models.CharField(max_length=30)
+    user_id = models.CharField(max_length=30, unique=True)
+    password = models.CharField(max_length=128)  # 해시된 비밀번호
     username = models.CharField(max_length=30)
     warehouse = models.CharField(max_length=30)
-    
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    last_login = models.DateTimeField(null=True, blank=True)
+
+    USERNAME_FIELD = 'user_id'
+    REQUIRED_FIELDS = ['username']
+
+    objects = ExternalMemberManager()
+
     class Meta:
-        managed = False
         db_table = 'external_member'
-
-
-class ExternalMemberToken(models.Model):
-    key = models.CharField("Key", max_length=40, primary_key=True)
-    user = models.OneToOneField(
-        ExternalMember,
-        related_name='auth_token',
-        on_delete=models.CASCADE,
-        verbose_name="External Member"
-    )
-    created = models.DateTimeField("Created", auto_now_add=True)
-    expires_at = models.DateTimeField("Expires At", null=True)
-
-    def save(self, *args, **kwargs):
-        if not self.key:
-            self.key = self.generate_key()
-            self.expires_at = timezone.now() + timedelta(hours=24)  # 예시로 24시간 후 만료
-        return super().save(*args, **kwargs)
-
-    def generate_key(self):
-        return Token.generate_key()
-
-    class Meta:
-        unique_together = (('user', 'key'),)
-
+        managed = False
 
 # 창고 
 class ExternalInventory(models.Model):
