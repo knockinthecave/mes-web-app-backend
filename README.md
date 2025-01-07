@@ -1,4 +1,4 @@
-# SwinTech 외부창고 관리용 모바일 앱 Backend
+# MES 모바일 웹 앱 Backend
 
 ## 설치방법
 
