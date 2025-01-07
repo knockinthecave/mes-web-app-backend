@@ -17,7 +17,7 @@
 - **프로그래밍 언어**: Python
 - **웹 프레임워크**: Django
 - **데이터베이스**: MariaDB
-- **API 문서화**: Swagger (`drf-yasg`)
+- **API 문서화**: Notion
 
 ---
 
